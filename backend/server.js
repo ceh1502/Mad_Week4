@@ -10,12 +10,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:4444", // 프론트엔드 주소
+    origin: "http://localhost:3000", // 프론트엔드 주소
     methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4444;
 
 // Swagger 설정
 const swaggerOptions = {
@@ -54,58 +54,16 @@ app.get('/', (req, res) => {
   });
 });
 
-// API 라우트 연결 (나중에 추가)
-// app.use('/api/chat', require('./routes/chat'));
-// app.use('/api/analysis', require('./routes/analysis'));
+// API 라우트 연결
+app.use('/api/chat', require('./routes/chat'));
+app.use('/api/analysis', require('./routes/analysis'));
 // app.use('/api/user', require('./routes/user'));
 
 // Socket.io 연결 처리
+const { handleChatEvents } = require('./socket/chatHandler');
+
 io.on('connection', (socket) => {
-  console.log('클라이언트가 연결되었습니다:', socket.id);
-  
-  // 채팅방 입장
-  socket.on('join-room', (roomId) => {
-    socket.join(roomId);
-    console.log(`클라이언트 ${socket.id}가 방 ${roomId}에 입장했습니다.`);
-  });
-  
-  // 메시지 수신 및 분석
-  socket.on('send-message', async (data) => {
-    try {
-      const { roomId, message, sender } = data;
-      
-      // 메시지를 같은 방의 모든 사용자에게 전송
-      io.to(roomId).emit('receive-message', {
-        id: Date.now(),
-        message,
-        sender,
-        timestamp: new Date(),
-      });
-      
-      // AI 분석 결과 전송 (임시)
-      setTimeout(() => {
-        io.to(roomId).emit('analysis-result', {
-          suggestions: [
-            "재미있네요! 더 자세히 얘기해주세요",
-            "그런 일이 있었군요. 어떤 기분이셨나요?",
-            "오~ 대박! 👍"
-          ],
-          sentiment: "긍정적",
-          interest_level: 8.5,
-          topic: "일상 대화"
-        });
-      }, 1000);
-      
-    } catch (error) {
-      console.error('메시지 처리 오류:', error);
-      socket.emit('error', { message: '메시지 처리 중 오류가 발생했습니다.' });
-    }
-  });
-  
-  // 연결 해제
-  socket.on('disconnect', () => {
-    console.log('클라이언트가 연결을 해제했습니다:', socket.id);
-  });
+  handleChatEvents(io, socket);
 });
 
 // 에러 핸들링
