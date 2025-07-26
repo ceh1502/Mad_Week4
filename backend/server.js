@@ -70,6 +70,7 @@ require('./models');
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/analysis', require('./routes/analysis'));
+app.use('/api/setup', require('./routes/setup'));
 
 // Socket.io 연결 처리
 const { handleChatEvents } = require('./socket/chatHandler');

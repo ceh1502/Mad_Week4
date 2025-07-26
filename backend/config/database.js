@@ -44,16 +44,26 @@ const sequelize = process.env.DATABASE_URL
         }
       });
 
-// 데이터베이스 연결 테스트
-const testConnection = async () => {
+// 데이터베이스 연결 및 테이블 생성
+const initDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ 데이터베이스 연결 성공');
+    
+    // 테이블 자동 생성 (개발 환경에서만)
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ force: false, alter: true });
+      console.log('🔧 데이터베이스 테이블 동기화 완료');
+    } else {
+      // 프로덕션에서는 안전하게 테이블만 생성
+      await sequelize.sync({ force: false });
+      console.log('🔧 데이터베이스 테이블 생성 완료');
+    }
   } catch (error) {
-    console.error('❌ 데이터베이스 연결 실패:', error);
+    console.error('❌ 데이터베이스 초기화 실패:', error);
   }
 };
 
-testConnection();
+initDatabase();
 
 module.exports = sequelize;
