@@ -3,13 +3,10 @@ const { analyzeEmotion, extractTopics, calculateInterestLevel } = require('../ut
 
 class AIService {
   constructor() {
-    this.openaiApiKey = process.env.OPENAI_API_KEY;
-    this.claudeApiKey = process.env.CLAUDE_API_KEY;
     this.geminiApiKey = process.env.GEMINI_API_KEY;
-    this.useLocalAnalysis = !this.openaiApiKey && !this.claudeApiKey;
     
-    if (this.useLocalAnalysis) {
-      console.log('🤖 AI API 키가 없어서 로컬 분석을 사용합니다.');
+    if (!this.geminiApiKey) {
+      console.log('🤖 Gemini API 키가 없어서 로컬 분석을 사용합니다.');
     }
   }
 
@@ -56,107 +53,10 @@ class AIService {
   // 답변 추천 생성
   async generateSuggestions(messages, newMessage) {
     if (this.geminiApiKey) {
-        return await this.generateSuggestionsWithGemini(messages, newMessage);
-    }
-
-    if (this.openaiApiKey) {
-      return await this.generateSuggestionsWithOpenAI(messages, newMessage);
-    }
-    
-    if (this.claudeApiKey) {
-      return await this.generateSuggestionsWithClaude(messages, newMessage);
+      return await this.generateSuggestionsWithGemini(messages, newMessage);
     }
     
     return this.generateLocalSuggestions(newMessage.message);
-  }
-
-  // OpenAI API로 답변 추천
-  async generateSuggestionsWithOpenAI(messages, newMessage) {
-    try {
-      const conversationContext = this.buildConversationContext(messages);
-      
-      const prompt = `다음은 채팅 대화입니다. 마지막 메시지에 대한 자연스럽고 감정적으로 적절한 답변 3개를 추천해주세요.
-
-대화 히스토리:
-${conversationContext}
-
-마지막 메시지: "${newMessage.message}"
-발신자: ${newMessage.sender}
-
-요구사항:
-1. 한국어로 답변
-2. 감정을 고려한 적절한 톤
-3. 대화를 이어갈 수 있는 답변
-4. 각 답변은 한 줄로, 30자 이내
-5. JSON 형태로 응답: {"suggestions": ["답변1", "답변2", "답변3"]}`;
-
-      const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: '당신은 한국어 대화 분석 전문가입니다.' },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 200,
-        temperature: 0.7
-      }, {
-        headers: {
-          'Authorization': `Bearer ${this.openaiApiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-    const content = response.data.candidates[0].content.parts[0].text;
-    // 마크다운 코드 블록 제거
-    const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
-    const parsed = JSON.parse(cleanContent);
-      return parsed.suggestions || this.generateLocalSuggestions(newMessage.message);
-
-    } catch (error) {
-      console.error('OpenAI API 오류:', error.response?.data || error.message);
-      return this.generateLocalSuggestions(newMessage.message);
-    }
-  }
-
-  // Claude API로 답변 추천
-  async generateSuggestionsWithClaude(messages, newMessage) {
-    try {
-      const conversationContext = this.buildConversationContext(messages);
-      
-      const prompt = `채팅 대화에서 마지막 메시지에 대한 자연스러운 답변 3개를 추천해주세요.
-
-대화 맥락:
-${conversationContext}
-
-새 메시지: "${newMessage.message}" (${newMessage.sender})
-
-답변 조건:
-- 감정을 고려한 적절한 반응
-- 대화를 이어갈 수 있는 내용
-- 한국어, 30자 이내
-- JSON 형태: {"suggestions": ["답변1", "답변2", "답변3"]}`;
-
-      const response = await axios.post('https://api.anthropic.com/v1/messages', {
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 200,
-        messages: [
-          { role: 'user', content: prompt }
-        ]
-      }, {
-        headers: {
-          'x-api-key': this.claudeApiKey,
-          'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01'
-        }
-      });
-
-      const content = response.data.content[0].text;
-      const parsed = JSON.parse(content);
-      return parsed.suggestions || this.generateLocalSuggestions(newMessage.message);
-
-    } catch (error) {
-      console.error('Claude API 오류:', error.response?.data || error.message);
-      return this.generateLocalSuggestions(newMessage.message);
-    }
   }
 
   // Gemini API로 답변 추천
@@ -166,16 +66,16 @@ ${conversationContext}
 
       const prompt = `채팅 대화에서 마지막 메시지에 대한 자연스러운 답변 3개를 추천해주세요.
 
-  대화 맥락:
-  ${conversationContext}
+대화 맥락:
+${conversationContext}
 
-  새 메시지: "${newMessage.message}" (${newMessage.sender})
+새 메시지: "${newMessage.message}" (${newMessage.sender})
 
-  답변 조건:
-  - 감정을 고려한 적절한 반응
-  - 대화를 이어갈 수 있는 내용  
-  - 한국어, 30자 이내
-  - JSON 형태로만 응답: {"suggestions": ["답변1", "답변2", "답변3"]}`;
+답변 조건:
+- 감정을 고려한 적절한 반응
+- 대화를 이어갈 수 있는 내용  
+- 한국어, 30자 이내
+- JSON 형태로만 응답: {"suggestions": ["답변1", "답변2", "답변3"]}`;
 
       const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`, {
         contents: [{
@@ -193,11 +93,11 @@ ${conversationContext}
         }
       });
 
-    const content = response.data.candidates[0].content.parts[0].text;
-    // 마크다운 코드 블록 제거
-    const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
-    const parsed = JSON.parse(cleanContent);
-    return parsed.suggestions || this.generateLocalSuggestions(newMessage.message);
+      const content = response.data.candidates[0].content.parts[0].text;
+      // 마크다운 코드 블록 제거
+      const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleanContent);
+      return parsed.suggestions || this.generateLocalSuggestions(newMessage.message);
 
     } catch (error) {
       console.error('Gemini API 오류:', error.response?.data || error.message);
@@ -242,50 +142,10 @@ ${conversationContext}
     ];
   }
 
-
-  
   // 감정 분석
   async analyzeSentiment(message) {
-    if (this.openaiApiKey) {
-      return await this.analyzeSentimentWithAI(message);
-    }
-    
     // 로컬 분석 사용
     return analyzeEmotion(message);
-  }
-
-  // AI 기반 감정 분석
-  async analyzeSentimentWithAI(message) {
-    try {
-      const prompt = `다음 메시지의 감정을 분석해주세요: "${message}"
-      
-JSON 형태로 응답: {
-  "sentiment": "positive|negative|neutral",
-  "confidence": 0.8,
-  "score": 1,
-  "emotions": ["기쁨", "흥미"]
-}`;
-
-      // OpenAI 호출 (간소화)
-      const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 150,
-        temperature: 0.3
-      }, {
-        headers: {
-          'Authorization': `Bearer ${this.openaiApiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const content = response.data.choices[0].message.content;
-      return JSON.parse(content);
-
-    } catch (error) {
-      console.error('AI 감정 분석 오류:', error);
-      return analyzeEmotion(message);
-    }
   }
 
   // 관심도 계산
@@ -308,17 +168,7 @@ JSON 형태로 응답: {
 
   // 주제 추출
   async extractTopics(message) {
-    const localTopics = extractTopics(message);
-    
-    if (this.openaiApiKey && message.length > 50) {
-      try {
-        return await this.extractTopicsWithAI(message);
-      } catch (error) {
-        console.error('AI 주제 추출 오류:', error);
-      }
-    }
-    
-    return localTopics;
+    return extractTopics(message);
   }
 
   // 대화 흐름 분석

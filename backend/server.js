@@ -32,6 +32,15 @@ const swaggerOptions = {
         description: '개발 서버',
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    }
   },
   apis: ['./routes/*.js'], // API 문서가 있는 파일 경로
 };
@@ -54,10 +63,13 @@ app.get('/', (req, res) => {
   });
 });
 
+// 데이터베이스 모델 초기화
+require('./models');
+
 // API 라우트 연결
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/analysis', require('./routes/analysis'));
-// app.use('/api/user', require('./routes/user'));
 
 // Socket.io 연결 처리
 const { handleChatEvents } = require('./socket/chatHandler');
