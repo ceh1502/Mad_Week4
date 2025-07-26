@@ -5,6 +5,7 @@ class AIService {
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY;
     this.claudeApiKey = process.env.CLAUDE_API_KEY;
+    this.geminiApiKey = process.env.GEMINI_API_KEY;
     this.useLocalAnalysis = !this.openaiApiKey && !this.claudeApiKey;
     
     if (this.useLocalAnalysis) {
@@ -54,6 +55,10 @@ class AIService {
 
   // 답변 추천 생성
   async generateSuggestions(messages, newMessage) {
+    if (this.geminiApiKey) {
+        return await this.generateSuggestionsWithGemini(messages, newMessage);
+    }
+
     if (this.openaiApiKey) {
       return await this.generateSuggestionsWithOpenAI(messages, newMessage);
     }
@@ -100,8 +105,10 @@ ${conversationContext}
         }
       });
 
-      const content = response.data.choices[0].message.content;
-      const parsed = JSON.parse(content);
+    const content = response.data.candidates[0].content.parts[0].text;
+    // 마크다운 코드 블록 제거
+    const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed = JSON.parse(cleanContent);
       return parsed.suggestions || this.generateLocalSuggestions(newMessage.message);
 
     } catch (error) {
@@ -152,6 +159,52 @@ ${conversationContext}
     }
   }
 
+  // Gemini API로 답변 추천
+  async generateSuggestionsWithGemini(messages, newMessage) {
+    try {
+      const conversationContext = this.buildConversationContext(messages);
+
+      const prompt = `채팅 대화에서 마지막 메시지에 대한 자연스러운 답변 3개를 추천해주세요.
+
+  대화 맥락:
+  ${conversationContext}
+
+  새 메시지: "${newMessage.message}" (${newMessage.sender})
+
+  답변 조건:
+  - 감정을 고려한 적절한 반응
+  - 대화를 이어갈 수 있는 내용  
+  - 한국어, 30자 이내
+  - JSON 형태로만 응답: {"suggestions": ["답변1", "답변2", "답변3"]}`;
+
+      const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`, {
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 200
+        }
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+    const content = response.data.candidates[0].content.parts[0].text;
+    // 마크다운 코드 블록 제거
+    const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed = JSON.parse(cleanContent);
+    return parsed.suggestions || this.generateLocalSuggestions(newMessage.message);
+
+    } catch (error) {
+      console.error('Gemini API 오류:', error.response?.data || error.message);
+      return this.generateLocalSuggestions(newMessage.message);
+    }
+  }
+
   // 로컬 답변 추천 (키워드 기반)
   generateLocalSuggestions(message) {
     const lowerMsg = message.toLowerCase();
@@ -189,6 +242,8 @@ ${conversationContext}
     ];
   }
 
+
+  
   // 감정 분석
   async analyzeSentiment(message) {
     if (this.openaiApiKey) {
