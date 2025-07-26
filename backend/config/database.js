@@ -1,23 +1,39 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('chat_analyzer', 'root', '', {
-  host: 'localhost',
-  dialect: 'mysql',
-  logging: false, // SQL \� D0
-  timezone: '+09:00', // \m �
-  define: {
-    timestamps: false, // createdAt, updatedAt �� �1 D0
-    underscored: true, // snake_case ��
-  }
-});
+// 환경변수에서 DATABASE_URL 사용 (PostgreSQL 연결 문자열)
+const sequelize = process.env.DATABASE_URL 
+  ? new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      },
+      define: {
+        timestamps: false,
+        underscored: true,
+      }
+    })
+  : new Sequelize('chat_analyzer', 'root', '', {
+      host: 'localhost',
+      dialect: 'mysql',
+      logging: false,
+      timezone: '+09:00',
+      define: {
+        timestamps: false,
+        underscored: true,
+      }
+    });
 
-// pt0�t� � L��
+// 데이터베이스 연결 테스트
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log(' MySQL pt0�t� � 1�');
+    console.log('✅ 데이터베이스 연결 성공');
   } catch (error) {
-    console.error('L pt0�t� � �(:', error);
+    console.error('❌ 데이터베이스 연결 실패:', error);
   }
 };
 
