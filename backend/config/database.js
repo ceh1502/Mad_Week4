@@ -1,23 +1,56 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('chat_analyzer', 'root', '', {
-  host: 'localhost',
-  dialect: 'mysql',
-  logging: false, // SQL \ø D0
-  timezone: '+09:00', // \m Ü
-  define: {
-    timestamps: false, // createdAt, updatedAt Ù İ1 D0
-    underscored: true, // snake_case ¬©
-  }
-});
+// PostgreSQL ì—°ê²° ì„¤ì •
+const sequelize = process.env.DATABASE_URL 
+  ? new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      },
+      define: {
+        timestamps: false,
+        underscored: true,
+      }
+    })
+  : process.env.DB_HOST 
+    ? new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT || 5432,
+        dialect: 'postgres',
+        logging: false,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        },
+        define: {
+          timestamps: false,
+          underscored: true,
+        }
+      })
+    : new Sequelize('chat_analyzer', 'root', '', {
+        host: 'localhost',
+        dialect: 'mysql',
+        logging: false,
+        timezone: '+09:00',
+        define: {
+          timestamps: false,
+          underscored: true,
+        }
+      });
 
-// pt0 t¤ ğ° L¤¸
+// ë°ì´í„°ë² ì´ìŠ¤ ì—°ê²° í…ŒìŠ¤íŠ¸
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log(' MySQL pt0 t¤ ğ° 1õ');
+    console.log('âœ… ë°ì´í„°ë² ì´ìŠ¤ ì—°ê²° ì„±ê³µ');
   } catch (error) {
-    console.error('L pt0 t¤ ğ° ä(:', error);
+    console.error('âŒ ë°ì´í„°ë² ì´ìŠ¤ ì—°ê²° ì‹¤íŒ¨:', error);
   }
 };
 
