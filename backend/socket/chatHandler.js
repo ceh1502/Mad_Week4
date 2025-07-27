@@ -1,47 +1,139 @@
-const { v4: uuidv4 } = require('uuid');
-const aiService = require('../services/aiService');
+const jwt = require('jsonwebtoken');
+const { User, Room, Message, UserRoom } = require('../models');
 
-// 간단한 메모리 저장소 (나중에 Redis나 DB로 교체)
-const activeRooms = new Map();
-const userSessions = new Map();
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
+
+// 온라인 사용자 관리
+const onlineUsers = new Map(); // socketId -> { userId, username, roomId }
+const userSockets = new Map(); // userId -> socketId
 
 function handleChatEvents(io, socket) {
   console.log('🔗 클라이언트 연결:', socket.id);
   
-  // 채팅방 입장
-  socket.on('join-room', (data) => {
+  // JWT 인증
+  socket.on('authenticate', async (data) => {
     try {
-      const { roomId, username } = data;
+      const { token } = data;
+      
+      if (!token) {
+        socket.emit('auth-error', { message: '토큰이 필요합니다.' });
+        return;
+      }
+      
+      // JWT 토큰 검증
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const user = await User.findByPk(decoded.userId);
+      
+      if (!user) {
+        socket.emit('auth-error', { message: '유효하지 않은 사용자입니다.' });
+        return;
+      }
+      
+      // 사용자 정보 저장
+      onlineUsers.set(socket.id, {
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+        authenticatedAt: new Date()
+      });
+      
+      // 중복 연결 처리 (기존 소켓 연결 해제)
+      const existingSocketId = userSockets.get(user.id);
+      if (existingSocketId && existingSocketId !== socket.id) {
+        const existingSocket = io.sockets.sockets.get(existingSocketId);
+        if (existingSocket) {
+          existingSocket.emit('duplicate-connection', { message: '다른 곳에서 로그인하여 연결이 해제됩니다.' });
+          existingSocket.disconnect();
+        }
+      }
+      
+      userSockets.set(user.id, socket.id);
+      
+      console.log(`🔐 ${user.username}(${socket.id}) 인증 완료`);
+      
+      socket.emit('authenticated', {
+        success: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email
+        }
+      });
+      
+    } catch (error) {
+      console.error('인증 오류:', error);
+      socket.emit('auth-error', { message: '인증에 실패했습니다.' });
+    }
+  });
+  
+  // 채팅방 입장
+  socket.on('join-room', async (data) => {
+    try {
+      const { roomId } = data;
+      const userSession = onlineUsers.get(socket.id);
+      
+      if (!userSession) {
+        socket.emit('error', { message: '먼저 인증해주세요.' });
+        return;
+      }
+      
+      // 채팅방 존재 및 권한 확인
+      const userRoom = await UserRoom.findOne({
+        where: {
+          user_id: userSession.userId,
+          room_id: roomId
+        },
+        include: [{
+          model: Room,
+          as: 'room'
+        }]
+      });
+      
+      if (!userRoom) {
+        socket.emit('error', { message: '해당 채팅방에 접근할 권한이 없습니다.' });
+        return;
+      }
       
       // 이전 방에서 나가기
-      const previousRoom = userSessions.get(socket.id);
-      if (previousRoom) {
-        socket.leave(previousRoom.roomId);
-        updateRoomUsers(io, previousRoom.roomId, socket.id, 'leave');
+      if (userSession.roomId) {
+        socket.leave(userSession.roomId);
+        socket.to(userSession.roomId).emit('user-left-room', {
+          userId: userSession.userId,
+          username: userSession.username
+        });
       }
       
       // 새 방 입장
       socket.join(roomId);
-      userSessions.set(socket.id, { roomId, username, joinedAt: new Date() });
+      userSession.roomId = roomId;
+      onlineUsers.set(socket.id, userSession);
       
-      // 방 정보 업데이트
-      updateRoomUsers(io, roomId, socket.id, 'join', username);
+      console.log(`👤 ${userSession.username}이 방 ${roomId}에 입장`);
       
-      console.log(`👤 ${username}(${socket.id})가 방 ${roomId}에 입장`);
+      // 최근 메시지 가져오기
+      const messages = await Message.findAll({
+        where: { room_id: roomId },
+        include: [{
+          model: User,
+          as: 'user',
+          attributes: ['id', 'username']
+        }],
+        order: [['created_at', 'DESC']],
+        limit: 50
+      });
       
-      // 입장 확인 메시지 전송
+      // 입장 확인 및 메시지 전송
       socket.emit('room-joined', {
         success: true,
         roomId,
-        message: `${roomId} 방에 입장했습니다.`,
-        timestamp: new Date()
+        room: userRoom.room,
+        messages: messages.reverse() // 시간순 정렬
       });
       
       // 다른 사용자들에게 입장 알림
-      socket.to(roomId).emit('user-joined', {
-        username,
-        message: `${username}님이 입장했습니다.`,
-        timestamp: new Date()
+      socket.to(roomId).emit('user-joined-room', {
+        userId: userSession.userId,
+        username: userSession.username
       });
       
     } catch (error) {
@@ -53,39 +145,50 @@ function handleChatEvents(io, socket) {
   // 메시지 전송
   socket.on('send-message', async (data) => {
     try {
-      const { roomId, message, sender, messageType = 'text' } = data;
-      const userSession = userSessions.get(socket.id);
+      const { roomId, message } = data;
+      const userSession = onlineUsers.get(socket.id);
       
-      if (!userSession || userSession.roomId !== roomId) {
+      if (!userSession) {
+        socket.emit('error', { message: '먼저 인증해주세요.' });
+        return;
+      }
+      
+      if (!userSession.roomId || userSession.roomId !== roomId) {
         socket.emit('error', { message: '먼저 채팅방에 입장해주세요.' });
         return;
       }
       
-      // 메시지 객체 생성
-      const messageObj = {
-        id: uuidv4(),
-        message: message.trim(),
-        sender: sender || userSession.username,
-        messageType, // text, emoji, image 등
-        timestamp: new Date(),
-        roomId
-      };
-      
-      // 입력 검증
-      if (!messageObj.message || messageObj.message.length > 1000) {
-        socket.emit('error', { message: '메시지는 1-1000자 사이여야 합니다.' });
+      // 메시지 유효성 검사
+      if (!message || message.trim().length === 0) {
+        socket.emit('error', { message: '메시지를 입력해주세요.' });
         return;
       }
       
-      console.log(`💬 [${roomId}] ${messageObj.sender}: ${messageObj.message}`);
+      if (message.length > 1000) {
+        socket.emit('error', { message: '메시지는 1000자 이하로 입력해주세요.' });
+        return;
+      }
       
-      // 같은 방의 모든 사용자에게 메시지 전송
-      io.to(roomId).emit('receive-message', messageObj);
+      // 데이터베이스에 메시지 저장
+      const newMessage = await Message.create({
+        room_id: roomId,
+        user_id: userSession.userId,
+        message: message.trim()
+      });
       
-      // AI 분석 요청 (비동기)
-      setTimeout(async () => {
-        await requestAnalysis(io, roomId, messageObj, messages.get(roomId) || []);
-      }, 500);
+      // 사용자 정보와 함께 메시지 조회
+      const messageWithUser = await Message.findByPk(newMessage.id, {
+        include: [{
+          model: User,
+          as: 'user',
+          attributes: ['id', 'username']
+        }]
+      });
+      
+      console.log(`💬 [${roomId}] ${userSession.username}: ${message.trim()}`);
+      
+      // 같은 방의 모든 사용자에게 실시간 메시지 전송
+      io.to(roomId).emit('receive-message', messageWithUser);
       
     } catch (error) {
       console.error('메시지 전송 오류:', error);
@@ -96,10 +199,11 @@ function handleChatEvents(io, socket) {
   // 타이핑 상태 알림
   socket.on('typing-start', (data) => {
     const { roomId } = data;
-    const userSession = userSessions.get(socket.id);
+    const userSession = onlineUsers.get(socket.id);
     
     if (userSession && userSession.roomId === roomId) {
       socket.to(roomId).emit('user-typing', {
+        userId: userSession.userId,
         username: userSession.username,
         isTyping: true
       });
@@ -108,26 +212,55 @@ function handleChatEvents(io, socket) {
   
   socket.on('typing-stop', (data) => {
     const { roomId } = data;
-    const userSession = userSessions.get(socket.id);
+    const userSession = onlineUsers.get(socket.id);
     
     if (userSession && userSession.roomId === roomId) {
       socket.to(roomId).emit('user-typing', {
+        userId: userSession.userId,
         username: userSession.username,
         isTyping: false
       });
     }
   });
   
-  // 메시지 읽음 처리
+  // 메시지 읽음 표시
   socket.on('mark-read', (data) => {
     const { roomId, messageId } = data;
-    const userSession = userSessions.get(socket.id);
+    const userSession = onlineUsers.get(socket.id);
     
     if (userSession && userSession.roomId === roomId) {
       socket.to(roomId).emit('message-read', {
         messageId,
-        readBy: userSession.username,
+        readBy: {
+          userId: userSession.userId,
+          username: userSession.username
+        },
         timestamp: new Date()
+      });
+    }
+  });
+  
+  // 온라인 사용자 목록 요청
+  socket.on('get-online-users', (data) => {
+    const { roomId } = data;
+    const userSession = onlineUsers.get(socket.id);
+    
+    if (userSession && userSession.roomId === roomId) {
+      // 해당 방의 온라인 사용자 찾기
+      const roomUsers = [];
+      for (const [socketId, session] of onlineUsers.entries()) {
+        if (session.roomId === roomId) {
+          roomUsers.push({
+            userId: session.userId,
+            username: session.username
+          });
+        }
+      }
+      
+      socket.emit('online-users', {
+        roomId,
+        users: roomUsers,
+        count: roomUsers.length
       });
     }
   });
@@ -135,174 +268,79 @@ function handleChatEvents(io, socket) {
   // 연결 해제
   socket.on('disconnect', (reason) => {
     try {
-      const userSession = userSessions.get(socket.id);
+      const userSession = onlineUsers.get(socket.id);
       
       if (userSession) {
-        const { roomId, username } = userSession;
+        console.log(`👋 ${userSession.username}(${socket.id}) 연결 해제: ${reason}`);
         
-        // 방에서 나가기
-        updateRoomUsers(io, roomId, socket.id, 'leave');
+        // 채팅방에서 나가기 알림
+        if (userSession.roomId) {
+          socket.to(userSession.roomId).emit('user-left-room', {
+            userId: userSession.userId,
+            username: userSession.username
+          });
+        }
         
-        // 다른 사용자들에게 퇴장 알림
-        socket.to(roomId).emit('user-left', {
-          username,
-          message: `${username}님이 퇴장했습니다.`,
-          timestamp: new Date()
-        });
-        
-        console.log(`👋 ${username}(${socket.id}) 연결 해제: ${reason}`);
+        // 사용자 소켓 매핑 제거
+        userSockets.delete(userSession.userId);
       }
       
       // 세션 정리
-      userSessions.delete(socket.id);
+      onlineUsers.delete(socket.id);
       
     } catch (error) {
       console.error('연결 해제 처리 오류:', error);
     }
   });
+  
+  // 에러 처리
+  socket.on('error', (error) => {
+    console.error('Socket 오류:', error);
+  });
 }
 
-// 방 사용자 정보 업데이트
-function updateRoomUsers(io, roomId, socketId, action, username = null) {
-  try {
-    if (!activeRooms.has(roomId)) {
-      activeRooms.set(roomId, {
-        users: new Map(),
-        createdAt: new Date()
+// 특정 사용자에게 메시지 전송 (다른 API에서 호출 가능)
+function sendMessageToUser(userId, event, data) {
+  const socketId = userSockets.get(userId);
+  if (socketId) {
+    const socket = io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit(event, data);
+      return true;
+    }
+  }
+  return false;
+}
+
+// 특정 방의 모든 사용자에게 메시지 전송
+function sendMessageToRoom(roomId, event, data) {
+  io.to(roomId).emit(event, data);
+}
+
+// 온라인 사용자 수 조회
+function getOnlineUserCount() {
+  return onlineUsers.size;
+}
+
+// 특정 방의 온라인 사용자 조회
+function getRoomUsers(roomId) {
+  const roomUsers = [];
+  for (const [socketId, session] of onlineUsers.entries()) {
+    if (session.roomId === roomId) {
+      roomUsers.push({
+        userId: session.userId,
+        username: session.username,
+        socketId
       });
     }
-    
-    const room = activeRooms.get(roomId);
-    
-    if (action === 'join' && username) {
-      room.users.set(socketId, {
-        username,
-        joinedAt: new Date(),
-        lastActivity: new Date()
-      });
-    } else if (action === 'leave') {
-      room.users.delete(socketId);
-    }
-    
-    // 현재 접속자 수 브로드캐스트
-    const userCount = room.users.size;
-    const userList = Array.from(room.users.values()).map(user => user.username);
-    
-    io.to(roomId).emit('room-info', {
-      roomId,
-      userCount,
-      users: userList,
-      timestamp: new Date()
-    });
-    
-    // 빈 방 정리
-    if (userCount === 0) {
-      activeRooms.delete(roomId);
-      console.log(`🗑️ 빈 방 삭제: ${roomId}`);
-    }
-    
-  } catch (error) {
-    console.error('방 사용자 업데이트 오류:', error);
   }
+  return roomUsers;
 }
 
-// AI 분석 요청
-async function requestAnalysis(io, roomId, messageObj, messages) {
-  try {
-    const analysisResult = await aiService.analyzeConversation(messages, messageObj);
-    
-    io.to(roomId).emit('analysis-result', analysisResult);
-    
-  } catch (error) {
-    console.error('분석 요청 오류:', error);
-    
-    // 실패시 기본 분석 전송
-    io.to(roomId).emit('analysis-result', {
-      messageId: messageObj.id,
-      suggestions: generateQuickSuggestions(messageObj.message),
-      sentiment: { type: 'neutral', confidence: 0.5 },
-      interestLevel: { score: 5.0, level: 'MEDIUM' },
-      error: '분석 서비스 오류'
-    });
-  }
-}
-
-// 빠른 답변 추천 생성
-function generateQuickSuggestions(message) {
-  const lowerMsg = message.toLowerCase();
-  
-  if (lowerMsg.includes('안녕') || lowerMsg.includes('hi') || lowerMsg.includes('hello')) {
-    return ['안녕하세요! 😊', '반가워요!', '좋은 하루 보내세요!'];
-  }
-  
-  if (lowerMsg.includes('고마워') || lowerMsg.includes('감사')) {
-    return ['천만에요!', '별말씀을요 😊', '도움이 되어서 기뻐요!'];
-  }
-  
-  if (lowerMsg.includes('힘들') || lowerMsg.includes('피곤')) {
-    return ['많이 힘드시겠어요 😔', '푹 쉬세요!', '무리하지 마세요'];
-  }
-  
-  if (lowerMsg.includes('좋') || lowerMsg.includes('행복') || lowerMsg.includes('😊')) {
-    return ['정말 좋으시겠어요! 😊', '저도 기분 좋아져요!', '축하해요! 🎉'];
-  }
-  
-  return [
-    '재미있네요! 😄',
-    '그래서 어떻게 되었나요?',
-    '더 자세히 얘기해주세요!'
-  ];
-}
-
-// 간단한 감정 분석
-function analyzeSentiment(message) {
-  const positive = ['좋', '행복', '최고', '사랑', '😊', '😍', '👍', '🎉'];
-  const negative = ['힘들', '싫', '화나', '우울', '😢', '😔', '💔', '😡'];
-  
-  let score = 0;
-  positive.forEach(word => {
-    if (message.includes(word)) score += 1;
-  });
-  negative.forEach(word => {
-    if (message.includes(word)) score -= 1;
-  });
-  
-  if (score > 0) return { type: 'positive', score, confidence: 0.8 };
-  if (score < 0) return { type: 'negative', score, confidence: 0.8 };
-  return { type: 'neutral', score: 0, confidence: 0.6 };
-}
-
-// 관심도 계산
-function calculateQuickInterest(message) {
-  const length = message.length;
-  const hasEmoji = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]/gu.test(message);
-  const hasQuestion = message.includes('?');
-  
-  let interest = Math.min(length / 20, 5); // 길이 기반
-  if (hasEmoji) interest += 2;
-  if (hasQuestion) interest += 1;
-  
-  return Math.min(Math.round(interest * 10) / 10, 10);
-}
-
-// 주제 추출
-function extractQuickTopics(message) {
-  const topicKeywords = {
-    '음식': ['밥', '음식', '맛있', '요리', '레스토랑', '카페'],
-    '일상': ['오늘', '어제', '내일', '하루', '시간'],
-    '감정': ['기분', '느낌', '생각', '마음'],
-    '취미': ['영화', '음악', '게임', '운동', '책'],
-    '일': ['회사', '업무', '일', '회의', '프로젝트']
-  };
-  
-  const foundTopics = [];
-  for (const [topic, keywords] of Object.entries(topicKeywords)) {
-    if (keywords.some(keyword => message.includes(keyword))) {
-      foundTopics.push(topic);
-    }
-  }
-  
-  return foundTopics.length > 0 ? foundTopics : ['일반'];
-}
-
-module.exports = { handleChatEvents };
+module.exports = { 
+  handleChatEvents,
+  sendMessageToUser,
+  sendMessageToRoom,
+  getOnlineUserCount,
+  getRoomUsers
+};
