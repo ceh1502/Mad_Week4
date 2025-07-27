@@ -68,6 +68,7 @@ require('./models');
 
 // API 라우트 연결
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/friends', require('./routes/friends'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/analysis', require('./routes/analysis'));
 app.use('/api/setup', require('./routes/setup'));
