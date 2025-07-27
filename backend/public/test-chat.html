@@ -305,6 +305,9 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    // 토큰 저장
+                    localStorage.setItem('token', data.data.token);
+                    
                     // Socket.IO 인증
                     if (!socket) connectSocket();
                     socket.emit('authenticate', { token: data.data.token });
@@ -354,11 +357,17 @@
             const targetUserId = prompt('채팅할 상대방 ID를 입력하세요:');
             if (!targetUserId) return;
             
+            const token = localStorage.getItem('token');
+            if (!token) {
+                updateStatus('먼저 로그인해주세요.', 'error');
+                return;
+            }
+            
             try {
                 const response = await fetch(`/api/chat/direct/${targetUserId}`, {
                     method: 'POST',
                     headers: { 
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
                 
