@@ -75,7 +75,7 @@ router.post('/direct/:userId', authenticateToken, async (req, res) => {
       chatRoom = await Room.create({
         name: `${req.user.username}, ${targetUser.username}`,
         description: '1:1 채팅방',
-        is_direct: true
+        // is_direct: true  // 임시로 주석 처리
       });
 
       // 두 사용자를 채팅방에 추가
@@ -124,7 +124,7 @@ router.post('/direct/:userId', authenticateToken, async (req, res) => {
           id: roomWithMessages.id,
           name: roomWithMessages.name,
           description: roomWithMessages.description,
-          is_direct: roomWithMessages.is_direct,
+          is_direct: roomWithMessages.description === '1:1 채팅방',
           users: roomWithMessages.users,
           participant: targetUser // 상대방 정보
         },
@@ -191,7 +191,7 @@ router.get('/rooms', authenticateToken, async (req, res) => {
       let displayName = room.name;
       let participant = null;
       
-      if (room.is_direct && room.users.length === 2) {
+      if (room.description === '1:1 채팅방' && room.users.length === 2) {
         // 상대방 찾기
         participant = room.users.find(user => user.id !== userId);
         if (participant) {
@@ -204,7 +204,7 @@ router.get('/rooms', authenticateToken, async (req, res) => {
         name: displayName,
         originalName: room.name,
         description: room.description,
-        is_direct: room.is_direct,
+        is_direct: room.description === '1:1 채팅방',
         participant: participant,
         joinedAt: userRoom.joined_at,
         lastMessage: room.messages[0] || null
