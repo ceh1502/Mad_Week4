@@ -2,6 +2,7 @@ const User = require('./User');
 const Room = require('./Room');
 const Message = require('./Message');
 const UserRoom = require('./UserRoom');
+const Friendship = require('./Friendship');
 
 // 관계 설정
 // User와 Room은 다대다 관계 (UserRoom을 통해)
@@ -50,9 +51,26 @@ UserRoom.belongsTo(Room, {
   as: 'room'
 });
 
+// Friendship 관계
+Friendship.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+Friendship.belongsTo(User, {
+  foreignKey: 'friend_id',
+  as: 'friend'
+});
+
+User.hasMany(Friendship, {
+  foreignKey: 'user_id',
+  as: 'friendships'
+});
+
 module.exports = {
   User,
   Room,
   Message,
-  UserRoom
+  UserRoom,
+  Friendship
 };
