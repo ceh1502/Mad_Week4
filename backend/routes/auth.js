@@ -32,13 +32,21 @@ const { generateToken, authenticateToken } = require('../middleware/auth');
  */
 router.post('/register', async (req, res) => {
   try {
+    console.log('회원가입 요청 받음:', {
+      body: req.body,
+      headers: req.headers['content-type'],
+      method: req.method
+    });
+    
     const { username, password } = req.body;
 
     // 입력 검증
     if (!username || !password) {
+      console.log('입력 검증 실패:', { username, password });
       return res.status(400).json({
         success: false,
-        message: '사용자명과 비밀번호를 입력해주세요.'
+        message: '사용자명과 비밀번호를 입력해주세요.',
+        received: { username, password }
       });
     }
 

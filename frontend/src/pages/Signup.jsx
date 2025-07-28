@@ -37,16 +37,23 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
     setError('');
 
     try {
+      const requestData = {
+        username: formData.username,
+        password: formData.password
+      };
+      
+      console.log('회원가입 요청 데이터:', requestData);
+      console.log('API URL:', process.env.REACT_APP_API_URL);
+      
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password
-        }),
+        body: JSON.stringify(requestData),
       });
+      
+      console.log('응답 상태:', response.status);
 
       const data = await response.json();
 
