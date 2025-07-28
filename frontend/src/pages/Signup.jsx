@@ -1,117 +1,43 @@
-import React, { useState } from 'react';
+import React from 'react';
 import FloatingHearts2 from '../components/FloatingHearts2';
-import '../styles/Signin.css';
+import '../styles/Signup.css';
 import GlassPanel from '../components/GlassPanel';
 import logo from '../assets/logo.png';
 
-const Signup = ({ onSignupSuccess, onBackToLogin }) => {
-    const [formData, setFormData] = useState({
-        username: '',
-        password: '',
-        confirmPassword: ''
-    });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-        setError('');
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match.');
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: formData.username,
-                    password: formData.password
-                }),
-            });
-
-            if (response.ok) {
-                onSignupSuccess();
-            } else {
-                const errorData = await response.json();
-                setError(errorData.message || 'Signup failed.');
-            }
-        } catch (error) {
-            setError('Server connection failed.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="initPageWrapper">
-            <FloatingHearts2 />
-            <div className="backgroundBlur" />
-            <GlassPanel width="480px">
-                <img src={logo} alt="logo" className="logo" />
-                <form className="formGrid" onSubmit={handleSubmit}>
-                    <label htmlFor="username">ID</label>
-                    <input
-                        id="username"
-                        name="username"
-                        type="text"
-                        className="inputField"
-                        value={formData.username}
-                        onChange={handleChange}
-                        required
-                    />
-                    <label htmlFor="password">PW</label>
-                    <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        className="inputField"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                    />
-                    <label htmlFor="confirmPassword">Confirm PW</label>
-                    <input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        className="inputField"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        required
-                    />
-                </form>
-                {error && <div className="error-message">{error}</div>}
-                <button 
-                    type="submit" 
-                    className="CommonBtn" 
-                    onClick={handleSubmit}
-                    disabled={loading}
-                >
-                    {loading ? 'Signing up...' : 'Sign up'}
-                </button>
-                <button 
-                    type="button" 
-                    className="CommonBtn secondary" 
-                    onClick={onBackToLogin}
-                >
-                    Back to Login
-                </button>
-            </GlassPanel>
+const Signup = () => {
+  return (
+    <div className="initPageWrapper">
+      <FloatingHearts2 />
+      <div className="backgroundBlur" />
+      <GlassPanel width="480px">
+        <img src={logo} alt="logo" className="logo" />
+        <div className="SignupContent">
+        <div className="photoUpload">
+          <div className="photoCircle" />
+          <button className="uploadBtn">사진 업로드</button>
         </div>
-    );
+
+        <div className="SignupformGrid">
+          <div className="SignupformRow">
+            <label htmlFor="name">Name</label>
+            <input type="text" id="name" />
+          </div>
+          <div className="SignupformRow">
+            <label htmlFor="id">ID</label>
+            <input type="text" id="id" />
+          </div>
+          <div className="SignupformRow">
+            <label htmlFor="pw">PW</label>
+            <input type="password" id="pw" />
+          </div>
+        </div>
+        </div>
+        <div className="btnRow">
+          <button className="CommonBtn">Sign Up</button>
+        </div>
+      </GlassPanel>
+    </div>
+  );
 };
 
 export default Signup;
