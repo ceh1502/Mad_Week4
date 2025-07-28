@@ -11,8 +11,7 @@ const InitPage=({onSigninClick})=>{
             <div className="backgroundBlur"/>
             <GlassPanel width="480px">
                 <img src={logo}alt="logo" className="logo" />
-                <button onClick={onSigninClick}className="CommonBtn"> Sign in </button>
-                <button className="CommonBtn"> Sign up</button>
+                <button onClick={onSigninClick} className="CommonBtn"> Sign in </button>
             </GlassPanel>
         </div>
     );
