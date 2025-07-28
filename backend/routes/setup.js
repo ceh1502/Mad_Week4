@@ -24,21 +24,23 @@ router.post('/init', async (req, res) => {
       });
     }
 
-    // 사용자 생성
-    const users = await User.bulkCreate([
-      {
-        username: '김철수',
-        password: 'password123'
-      },
-      {
-        username: '이영희',
-        password: 'password123'
-      },
-      {
-        username: '박민수',
-        password: 'password123'
-      }
-    ]);
+    // 사용자 생성 (개별 생성으로 변경 - beforeCreate 훅 작동)
+    const user1 = await User.create({
+      username: '김철수',
+      password: 'password123'
+    });
+    
+    const user2 = await User.create({
+      username: '이영희', 
+      password: 'password123'
+    });
+    
+    const user3 = await User.create({
+      username: '박민수',
+      password: 'password123'
+    });
+    
+    const users = [user1, user2, user3];
 
     // 채팅방 생성
     const rooms = await Room.bulkCreate([

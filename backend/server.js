@@ -86,7 +86,19 @@ app.get('/', (req, res) => {
   
   res.json({ 
     message: '채팅 분석 API 서버가 실행중입니다!',
-    swagger: `${protocol}://${host}/api-docs`
+    swagger: `${protocol}://${host}/api-docs`,
+    timestamp: new Date().toISOString(),
+    status: 'healthy'
+  });
+});
+
+// 헬스체크 엔드포인트
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: 'connected'
   });
 });
 
