@@ -26,17 +26,20 @@ router.post('/init', async (req, res) => {
 
     // 사용자 생성 (개별 생성으로 변경 - beforeCreate 훅 작동)
     const user1 = await User.create({
-      username: '김철수',
+      name: '김철수',
+      username: 'kimcheolsu',
       password: 'password123'
     });
     
     const user2 = await User.create({
-      username: '이영희', 
+      name: '이영희',
+      username: 'leeyounghee', 
       password: 'password123'
     });
     
     const user3 = await User.create({
-      username: '박민수',
+      name: '박민수',
+      username: 'parkminsu',
       password: 'password123'
     });
     

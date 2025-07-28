@@ -32,9 +32,14 @@ router.post('/test', (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               name:
  *                 type: string
  *                 example: "김철수"
+ *                 description: "실명 (선택사항)"
+ *               username:
+ *                 type: string
+ *                 example: "kimcheolsu"
+ *                 description: "사용자 ID"
  *               password:
  *                 type: string
  *                 example: "password123"
@@ -69,7 +74,7 @@ router.post('/register', async (req, res) => {
       });
     }
     
-    const { username, password } = req.body;
+    const { name, username, password } = req.body;
 
     // 입력 검증
     if (!username || !password) {
@@ -95,6 +100,7 @@ router.post('/register', async (req, res) => {
 
     // 새 사용자 생성
     const newUser = await User.create({
+      name: name || null,  // name이 없으면 null
       username,
       password
     });
@@ -107,6 +113,7 @@ router.post('/register', async (req, res) => {
       message: '회원가입이 완료되었습니다.',
       user: {
         id: newUser.id,
+        name: newUser.name,
         username: newUser.username
       },
       token
@@ -193,6 +200,7 @@ router.post('/login', async (req, res) => {
       message: '로그인 성공',
       user: {
         id: user.id,
+        name: user.name,
         username: user.username
       },
       token
@@ -255,7 +263,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: ['id', 'username', 'email', 'created_at'],
+      attributes: ['id', 'name', 'username', 'email', 'created_at'],
       order: [['created_at', 'DESC']]
     });
 

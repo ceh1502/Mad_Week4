@@ -116,7 +116,7 @@ app.get('/admin', async (req, res) => {
     
     // 최근 사용자들
     const recentUsers = await User.findAll({
-      attributes: ['id', 'username', 'email', 'created_at'],
+      attributes: ['id', 'name', 'username', 'email', 'created_at'],
       order: [['created_at', 'DESC']],
       limit: 10
     });
@@ -173,10 +173,11 @@ app.get('/admin', async (req, res) => {
               <div class="table-section">
                   <h2>👤 최근 가입 사용자</h2>
                   <table>
-                      <tr><th>ID</th><th>사용자명</th><th>이메일</th><th>가입일</th></tr>
+                      <tr><th>ID</th><th>실명</th><th>사용자명</th><th>이메일</th><th>가입일</th></tr>
                       \${recentUsers.map(user => \`
                           <tr>
                               <td>\${user.id}</td>
+                              <td>\${user.name || 'N/A'}</td>
                               <td>\${user.username}</td>
                               <td>\${user.email || 'N/A'}</td>
                               <td>\${new Date(user.created_at).toLocaleString('ko-KR')}</td>
@@ -355,9 +356,9 @@ const initData = async () => {
       // 테스트 사용자 생성
       const users = [];
       const testUsers = [
-        { username: '김철수', password: 'password123' },
-        { username: '이영희', password: 'password123' },
-        { username: '박민수', password: 'password123' }
+        { name: '김철수', username: 'kimcheolsu', password: 'password123' },
+        { name: '이영희', username: 'leeyounghee', password: 'password123' },
+        { name: '박민수', username: 'parkminsu', password: 'password123' }
       ];
       
       for (const userData of testUsers) {
