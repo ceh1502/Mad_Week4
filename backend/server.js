@@ -10,7 +10,11 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000", // 프론트엔드 주소
+    origin: [
+      "http://localhost:3000", // 개발용
+      "https://minecrafton.shop", // 운영용
+      "https://www.minecrafton.shop" // www 서브도메인
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
@@ -48,7 +52,14 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
 
 // 미들웨어 설정
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:3000", // 개발용
+    "https://minecrafton.shop", // 운영용
+    "https://www.minecrafton.shop" // www 서브도메인
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -60,9 +71,12 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 기본 라우트
 app.get('/', (req, res) => {
+  const host = req.get('host');
+  const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+  
   res.json({ 
     message: '채팅 분석 API 서버가 실행중입니다!',
-    swagger: `http://localhost:${PORT}/api-docs`
+    swagger: `${protocol}://${host}/api-docs`
   });
 });
 

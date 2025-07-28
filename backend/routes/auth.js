@@ -19,9 +19,6 @@ const { generateToken, authenticateToken } = require('../middleware/auth');
  *               username:
  *                 type: string
  *                 example: "김철수"
- *               email:
- *                 type: string
- *                 example: "kim@test.com"
  *               password:
  *                 type: string
  *                 example: "password123"
@@ -35,37 +32,31 @@ const { generateToken, authenticateToken } = require('../middleware/auth');
  */
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
 
     // 입력 검증
-    if (!username || !email || !password) {
+    if (!username || !password) {
       return res.status(400).json({
         success: false,
-        message: '모든 필드를 입력해주세요.'
+        message: '사용자명과 비밀번호를 입력해주세요.'
       });
     }
 
     // 이미 존재하는 사용자 확인
     const existingUser = await User.findOne({
-      where: {
-        [require('sequelize').Op.or]: [
-          { username },
-          { email }
-        ]
-      }
+      where: { username }
     });
 
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: '이미 존재하는 사용자명 또는 이메일입니다.'
+        message: '이미 존재하는 사용자명입니다.'
       });
     }
 
     // 새 사용자 생성
     const newUser = await User.create({
       username,
-      email,
       password
     });
 
@@ -78,8 +69,7 @@ router.post('/register', async (req, res) => {
       data: {
         user: {
           id: newUser.id,
-          username: newUser.username,
-          email: newUser.email
+          username: newUser.username
         },
         token
       }
@@ -161,8 +151,7 @@ router.post('/login', async (req, res) => {
       data: {
         user: {
           id: user.id,
-          username: user.username,
-          email: user.email
+          username: user.username
         },
         token
       }
@@ -199,7 +188,6 @@ router.get('/me', authenticateToken, async (req, res) => {
         user: {
           id: req.user.id,
           username: req.user.username,
-          email: req.user.email,
           created_at: req.user.created_at
         }
       }
