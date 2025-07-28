@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Mad Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 로고 화면 (Splash Screen) */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
+        }
+
+        .splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        .app-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+
+        .tap-hint {
+            font-size: 1rem;
+            opacity: 0.6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* 친구창 */
+        .friends-screen {
+            display: none;
+            height: 100vh;
+            background: white;
+        }
+
+        .friends-header {
+            background: #007AFF;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .friends-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .add-friend-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .add-friend-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .friends-list {
+            padding: 20px;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        .friend-item:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #007AFF, #5856D6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-right: 15px;
+        }
+
+        .friend-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .friend-status {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .online-indicator {
+            width: 12px;
+            height: 12px;
+            background: #34C759;
+            border-radius: 50%;
+            border: 2px solid white;
+            margin-left: 10px;
+        }
+
+        .empty-friends {
+            text-align: center;
+            color: #666;
+            margin-top: 50px;
+        }
+
+        .empty-friends .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* 대화창 */
+        .chat-screen {
+            display: none;
+            height: 100vh;
+            background: white;
+        }
+
+        .chat-header {
+            background: #007AFF;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            margin-right: 15px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .chat-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 140px);
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .message.own {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message.own .message-bubble {
+            background: #007AFF;
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.other .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 6px;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin: 0 8px 2px;
+        }
+
+        .message.own .message-time {
+            order: -1;
+        }
+
+        .typing-indicator {
+            padding: 10px 20px;
+            font-style: italic;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .chat-input-container {
+            background: white;
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: 1px solid #e0e0e0;
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #007AFF;
+        }
+
+        .send-btn {
+            background: #007AFF;
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            background: #0056CC;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: #007AFF;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: #007AFF;
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #0056CC;
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* 로딩 상태 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 반응형 */
+        @media (max-width: 480px) {
+            .app-title { font-size: 2rem; }
+            .app-subtitle { font-size: 1rem; }
+            .logo { font-size: 3rem; }
+            .friends-list { padding: 10px; }
+            .chat-messages { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 로고 화면 -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="logo">🚀</div>
+        <div class="app-title">Mad Chat</div>
+        <div class="app-subtitle">실시간 채팅의 새로운 경험</div>
+        <div class="tap-hint">화면을 터치해서 시작하기</div>
+    </div>
+
+    <!-- 친구창 -->
+    <div class="friends-screen" id="friendsScreen">
+        <div class="friends-header">
+            <div class="friends-title">친구</div>
+            <button class="add-friend-btn" onclick="showAddFriendModal()">
+                <span>👥 친구추가</span>
+            </button>
+        </div>
+        <div class="friends-list" id="friendsList">
+            <div class="empty-friends" id="emptyFriends">
+                <div class="icon">👥</div>
+                <div>아직 추가된 친구가 없습니다</div>
+                <div style="margin-top: 10px; color: #999; font-size: 0.9rem;">친구추가 버튼을 눌러 친구를 찾아보세요!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 대화창 -->
+    <div class="chat-screen" id="chatScreen">
+        <div class="chat-header">
+            <button class="back-btn" onclick="backToFriends()">←</button>
+            <div class="chat-title" id="chatTitle">친구와의 대화</div>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="typing-indicator" id="typingIndicator"></div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" 
+                   placeholder="메시지를 입력하세요..." 
+                   onkeypress="handleChatKeyPress(event)"
+                   oninput="handleTyping()"
+                   onblur="stopTyping()">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                <span>📤</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 친구추가 모달 -->
+    <div class="modal" id="addFriendModal">
+        <div class="modal-content">
+            <div class="modal-title">👥 친구추가</div>
+            <input type="text" class="modal-input" id="friendIdInput" 
+                   placeholder="친구의 사용자명을 입력하세요">
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="hideAddFriendModal()">취소</button>
+                <button class="modal-btn primary" onclick="addFriend()">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 로그인 모달 -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-title">🔐 로그인</div>
+            <input type="text" class="modal-input" id="loginUsername" 
+                   placeholder="사용자명" value="testuser">
+            <input type="password" class="modal-input" id="loginPassword" 
+                   placeholder="비밀번호" value="test123">
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="showRegisterModal()">회원가입</button>
+                <button class="modal-btn primary" onclick="login()">로그인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회원가입 모달 -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-title">📝 회원가입</div>
+            <input type="text" class="modal-input" id="registerUsername" 
+                   placeholder="사용자명">
+            <input type="email" class="modal-input" id="registerEmail" 
+                   placeholder="이메일">
+            <input type="password" class="modal-input" id="registerPassword" 
+                   placeholder="비밀번호">
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="showLoginModal()">로그인</button>
+                <button class="modal-btn primary" onclick="register()">가입하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // 전역 변수
+        let currentUser = null;
+        let currentFriend = null;
+        let currentRoom = null;
+        let socket = null;
+        let friends = [];
+        let typingTimer;
+
+        // 앱 초기화
+        window.addEventListener('load', () => {
+            // 스플래시 화면 클릭 이벤트
+            document.getElementById('splashScreen').addEventListener('click', () => {
+                document.getElementById('splashScreen').classList.add('hidden');
+                setTimeout(() => {
+                    document.getElementById('splashScreen').style.display = 'none';
+                    showLoginModal();
+                }, 500);
+            });
+        });
+
+        // 소켓 연결
+        function connectSocket() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('서버에 연결됨');
+            });
+            
+            socket.on('authenticated', (data) => {
+                currentUser = data.user;
+                console.log('인증 완료:', currentUser);
+                showFriendsScreen();
+                loadFriends();
+            });
+            
+            socket.on('room-joined', (data) => {
+                currentRoom = data.roomId;
+                displayMessages(data.messages);
+                scrollToBottom();
+            });
+            
+            socket.on('receive-message', (message) => {
+                displayMessage(message);
+                scrollToBottom();
+            });
+            
+            socket.on('user-typing', (data) => {
+                if (data.isTyping && data.userId !== currentUser.id) {
+                    document.getElementById('typingIndicator').textContent = 
+                        `${data.username}님이 입력 중...`;
+                } else {
+                    document.getElementById('typingIndicator').textContent = '';
+                }
+            });
+            
+            socket.on('error', (data) => {
+                alert('오류: ' + data.message);
+            });
+        }
+
+        // 로그인
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                alert('사용자명과 비밀번호를 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('token', data.data.token);
+                    hideAllModals();
+                    
+                    if (!socket) connectSocket();
+                    socket.emit('authenticate', { token: data.data.token });
+                } else {
+                    alert('로그인 실패: ' + data.message);
+                }
+            } catch (error) {
+                alert('로그인 오류: ' + error.message);
+            }
+        }
+
+        // 회원가입
+        async function register() {
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            if (!username || !email || !password) {
+                alert('모든 필드를 입력해주세요.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('회원가입 성공! 로그인해주세요.');
+                    showLoginModal();
+                    
+                    // 입력 필드 초기화
+                    document.getElementById('loginUsername').value = username;
+                    document.getElementById('loginPassword').value = password;
+                } else {
+                    alert('회원가입 실패: ' + data.message);
+                }
+            } catch (error) {
+                alert('회원가입 오류: ' + error.message);
+            }
+        }
+
+        // 친구 목록 로드
+        async function loadFriends() {
+            try {
+                // 일단 모든 사용자 표시 (테스트용)
+                const response = await fetch('/api/friends/search?q=', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    friends = data.data;
+                    displayFriends();
+                } else {
+                    // 실패시 빈 배열로 설정
+                    friends = [];
+                    displayFriends();
+                }
+            } catch (error) {
+                console.error('친구 목록 로드 오류:', error);
+                friends = [];
+                displayFriends();
+            }
+        }
+
+        // 친구 목록 표시
+        function displayFriends() {
+            const friendsList = document.getElementById('friendsList');
+            const emptyFriends = document.getElementById('emptyFriends');
+            
+            if (friends.length === 0) {
+                emptyFriends.style.display = 'block';
+                return;
+            }
+            
+            emptyFriends.style.display = 'none';
+            
+            friendsList.innerHTML = friends.map(friend => `
+                <div class="friend-item" onclick="startChatWithFriend(${friend.id}, '${friend.username}')">
+                    <div class="friend-avatar">${friend.username[0].toUpperCase()}</div>
+                    <div class="friend-info">
+                        <div class="friend-name">${friend.username}</div>
+                        <div class="friend-status">온라인</div>
+                    </div>
+                    <div class="online-indicator"></div>
+                </div>
+            `).join('');
+        }
+
+        // 친구추가
+        async function addFriend() {
+            const friendUsername = document.getElementById('friendIdInput').value.trim();
+            
+            if (!friendUsername) {
+                alert('친구의 사용자명을 입력해주세요.');
+                return;
+            }
+            
+            if (friendUsername === currentUser.username) {
+                alert('자기 자신을 친구로 추가할 수 없습니다.');
+                return;
+            }
+            
+            try {
+                // 사용자 검색
+                const response = await fetch(`/api/friends/search?q=${friendUsername}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    const newFriend = data.data.find(u => u.username === friendUsername);
+                    if (newFriend) {
+                        // 이미 친구인지 확인
+                        if (friends.some(f => f.id === newFriend.id)) {
+                            alert('이미 추가된 친구입니다.');
+                            return;
+                        }
+                        
+                        friends.push(newFriend);
+                        displayFriends();
+                        hideAddFriendModal();
+                        document.getElementById('friendIdInput').value = '';
+                        alert(`${newFriend.username}님을 친구로 추가했습니다!`);
+                    } else {
+                        alert('해당 사용자를 찾을 수 없습니다.');
+                    }
+                } else {
+                    alert('해당 사용자를 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                alert('친구추가 오류: ' + error.message);
+            }
+        }
+
+        // 친구와 채팅 시작
+        async function startChatWithFriend(friendId, friendName) {
+            currentFriend = { id: friendId, username: friendName };
+            
+            try {
+                const response = await fetch(`/api/chat/direct/${friendId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentRoom = data.data.room.id;
+                    document.getElementById('chatTitle').textContent = friendName;
+                    showChatScreen();
+                    
+                    // Socket.IO 방 입장
+                    socket.emit('join-room', { roomId: currentRoom });
+                    
+                    // 기존 메시지 표시
+                    if (data.data.messages) {
+                        displayMessages(data.data.messages);
+                    }
+                } else {
+                    alert('채팅방 생성 실패: ' + data.message);
+                }
+            } catch (error) {
+                alert('채팅 시작 오류: ' + error.message);
+            }
+        }
+
+        // 메시지 전송
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || !socket || !currentRoom) return;
+            
+            socket.emit('send-message', {
+                roomId: currentRoom,
+                message: message
+            });
+            
+            input.value = '';
+            stopTyping();
+        }
+
+        // 메시지 표시
+        function displayMessage(msg) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.user.id === currentUser.id ? 'own' : 'other'}`;
+            
+            const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">${msg.message}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+        }
+
+        // 여러 메시지 표시
+        function displayMessages(messages) {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+            
+            messages.forEach(msg => {
+                displayMessage(msg);
+            });
+        }
+
+        // 스크롤 하단으로
+        function scrollToBottom() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 타이핑 상태
+        function handleTyping() {
+            if (socket && currentRoom) {
+                socket.emit('typing-start', { roomId: currentRoom });
+                
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    stopTyping();
+                }, 1000);
+            }
+        }
+
+        function stopTyping() {
+            if (socket && currentRoom) {
+                socket.emit('typing-stop', { roomId: currentRoom });
+            }
+            clearTimeout(typingTimer);
+        }
+
+        // 키보드 이벤트
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // 화면 전환
+        function showFriendsScreen() {
+            document.getElementById('friendsScreen').style.display = 'block';
+            document.getElementById('chatScreen').style.display = 'none';
+        }
+
+        function showChatScreen() {
+            document.getElementById('friendsScreen').style.display = 'none';
+            document.getElementById('chatScreen').style.display = 'block';
+        }
+
+        function backToFriends() {
+            showFriendsScreen();
+            
+            // 채팅방에서 나가기
+            if (socket && currentRoom) {
+                socket.emit('leave-room', { roomId: currentRoom });
+            }
+            
+            currentRoom = null;
+            currentFriend = null;
+            document.getElementById('chatMessages').innerHTML = '';
+            document.getElementById('typingIndicator').textContent = '';
+        }
+
+        // 모달 관리
+        function showLoginModal() {
+            hideAllModals();
+            document.getElementById('loginModal').classList.add('show');
+        }
+
+        function showRegisterModal() {
+            hideAllModals();
+            document.getElementById('registerModal').classList.add('show');
+        }
+
+        function showAddFriendModal() {
+            document.getElementById('addFriendModal').classList.add('show');
+        }
+
+        function hideAddFriendModal() {
+            document.getElementById('addFriendModal').classList.remove('show');
+        }
+
+        function hideAllModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('show');
+            });
+        }
+
+        // 모달 외부 클릭시 닫기
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
