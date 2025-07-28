@@ -2,6 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git clone:*)",
+      "Bash(git merge:*)",
+      "Bash(ls:*)",
+      "Bash(npm install)",
+      "Bash(rm:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
       "Bash(git rm:*)",
       "Bash(cp:*)",
       "Bash(mkdir:*)",

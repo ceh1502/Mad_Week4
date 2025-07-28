@@ -4,9 +4,10 @@ const { analyzeEmotion, extractTopics, calculateInterestLevel } = require('../ut
 class AIService {
   constructor() {
     this.geminiApiKey = process.env.GEMINI_API_KEY;
+    this.openaiApiKey = process.env.OPENAI_API_KEY;
     
-    if (!this.geminiApiKey) {
-      console.log('🤖 Gemini API 키가 없어서 로컬 분석을 사용합니다.');
+    if (!this.openaiApiKey && !this.geminiApiKey) {
+      console.log('🤖 AI API 키가 없어서 로컬 분석을 사용합니다.');
     }
   }
 
@@ -52,7 +53,9 @@ class AIService {
 
   // 답변 추천 생성
   async generateSuggestions(messages, newMessage) {
-    if (this.geminiApiKey) {
+    if (this.openaiApiKey) {
+      return await this.generateSuggestionsWithOpenAI(messages, newMessage);
+    } else if (this.geminiApiKey) {
       return await this.generateSuggestionsWithGemini(messages, newMessage);
     }
     
@@ -105,6 +108,50 @@ ${conversationContext}
     }
   }
 
+  // OpenAI API로 답변 추천
+  async generateSuggestionsWithOpenAI(messages, newMessage) {
+    try {
+      const conversationContext = this.buildConversationContext(messages);
+
+      const prompt = `채팅 대화에서 마지막 메시지에 대한 자연스러운 답변 3개를 추천해주세요.
+
+대화 맥락:
+${conversationContext}
+
+새 메시지: "${newMessage.message}" (${newMessage.sender})
+
+답변 조건:
+- 감정을 고려한 적절한 반응
+- 대화를 이어갈 수 있는 내용  
+- 한국어, 30자 이내
+- JSON 형태로만 응답: {"suggestions": ["답변1", "답변2", "답변3"]}`;
+
+      const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 200,
+        temperature: 0.7
+      }, {
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const content = response.data.choices[0].message.content;
+      // JSON 파싱
+      const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleanContent);
+      return parsed.suggestions || this.generateLocalSuggestions(newMessage.message);
+
+    } catch (error) {
+      console.error('OpenAI API 오류:', error.response?.data || error.message);
+      return this.generateLocalSuggestions(newMessage.message);
+    }
+  }
+
   // 로컬 답변 추천 (키워드 기반)
   generateLocalSuggestions(message) {
     const lowerMsg = message.toLowerCase();
@@ -144,8 +191,60 @@ ${conversationContext}
 
   // 감정 분석
   async analyzeSentiment(message) {
+    if (this.openaiApiKey) {
+      return await this.analyzeSentimentWithOpenAI(message);
+    }
     // 로컬 분석 사용
     return analyzeEmotion(message);
+  }
+
+  // OpenAI로 감정 분석
+  async analyzeSentimentWithOpenAI(message) {
+    try {
+      const prompt = `다음 메시지의 감정을 분석해주세요:
+
+메시지: "${message}"
+
+분석 결과를 JSON 형태로 제공:
+{
+  "sentiment": "긍정적/부정적/중립",
+  "score": -5에서 5 사이 점수,
+  "confidence": 0에서 1 사이 신뢰도,
+  "emotions": ["감정들"],
+  "explanation": "간단한 설명"
+}`;
+
+      const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 200,
+        temperature: 0.3
+      }, {
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const content = response.data.choices[0].message.content;
+      const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleanContent);
+      
+      return {
+        sentiment: parsed.sentiment || '중립',
+        score: parsed.score || 0,
+        confidence: parsed.confidence || 0.5,
+        emotions: parsed.emotions || [],
+        explanation: parsed.explanation || '',
+        source: 'openai'
+      };
+
+    } catch (error) {
+      console.error('OpenAI 감정 분석 오류:', error.response?.data || error.message);
+      return analyzeEmotion(message);
+    }
   }
 
   // 관심도 계산

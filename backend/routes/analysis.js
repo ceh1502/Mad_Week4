@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { Message, User, Room, UserRoom } = require('../models');
+const { authenticateToken } = require('../middleware/auth');
+const aiService = require('../services/aiService');
 
 // 임시 분석 결과 저장소 (나중에 DB로 교체)
 const analysisResults = new Map();
@@ -197,7 +200,255 @@ router.get('/stats/:roomId', (req, res) => {
   }
 });
 
-// === 분석 함수들 (임시 구현) ===
+/**
+ * @swagger
+ * /api/analysis/chat/{roomId}:
+ *   post:
+ *     summary: 채팅방의 최근 30개 메시지 AI 분석
+ *     tags: [Analysis]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: roomId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 분석할 채팅방 ID
+ *     responses:
+ *       200:
+ *         description: AI 분석 결과
+ *       403:
+ *         description: 권한 없음
+ *       404:
+ *         description: 채팅방을 찾을 수 없음
+ */
+router.post('/chat/:roomId', authenticateToken, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user.id;
+
+    // 사용자가 해당 채팅방에 참여하고 있는지 확인
+    const userRoom = await UserRoom.findOne({
+      where: {
+        user_id: userId,
+        room_id: roomId
+      }
+    });
+
+    if (!userRoom) {
+      return res.status(403).json({
+        success: false,
+        message: '해당 채팅방에 접근할 권한이 없습니다.'
+      });
+    }
+
+    // 채팅방 정보 조회
+    const room = await Room.findByPk(roomId);
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: '채팅방을 찾을 수 없습니다.'
+      });
+    }
+
+    // 최근 30개 메시지 조회
+    const messages = await Message.findAll({
+      where: { room_id: roomId },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username']
+      }],
+      order: [['created_at', 'DESC']],
+      limit: 30
+    });
+
+    if (messages.length === 0) {
+      return res.json({
+        success: true,
+        message: '분석할 메시지가 없습니다.',
+        data: {
+          roomInfo: {
+            id: room.id,
+            name: room.name,
+            messageCount: 0
+          },
+          analysis: null
+        }
+      });
+    }
+
+    // 메시지를 시간순으로 정렬 (오래된 것부터)
+    const sortedMessages = messages.reverse();
+
+    // AI 분석 실행
+    console.log('🤖 OpenAI로 채팅 분석 시작...');
+    const analysis = await analyzeChatWithOpenAI(sortedMessages, room);
+
+    // 분석 결과 저장
+    const analysisId = `${roomId}-${Date.now()}`;
+    analysisResults.set(analysisId, {
+      id: analysisId,
+      roomId: parseInt(roomId),
+      analysis,
+      messageCount: sortedMessages.length,
+      timestamp: new Date()
+    });
+
+    res.json({
+      success: true,
+      message: 'AI 채팅 분석이 완료되었습니다.',
+      data: {
+        roomInfo: {
+          id: room.id,
+          name: room.name,
+          messageCount: sortedMessages.length
+        },
+        analysis
+      }
+    });
+
+  } catch (error) {
+    console.error('채팅 분석 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '채팅 분석 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
+});
+
+// === AI 분석 함수 ===
+
+// OpenAI로 채팅 전체 분석
+async function analyzeChatWithOpenAI(messages, room) {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openaiApiKey) {
+    console.log('OpenAI API 키가 없어서 로컬 분석을 사용합니다.');
+    return analyzeConversationLocal(messages);
+  }
+
+  try {
+    // 메시지를 텍스트로 변환
+    const conversationText = messages
+      .map(msg => `[${msg.user.username}] ${msg.message}`)
+      .join('\n');
+
+    const prompt = `다음은 채팅방 "${room.name}"의 대화 내용입니다. 이 대화를 종합적으로 분석해주세요.
+
+대화 내용:
+${conversationText}
+
+다음 항목들을 분석하여 JSON으로 응답해주세요:
+{
+  "overall_summary": "대화의 전반적인 요약 (3-5문장)",
+  "sentiment_analysis": {
+    "overall_mood": "전체적인 분위기 (긍정적/부정적/중립/혼재)",
+    "mood_changes": "분위기 변화가 있었다면 설명",
+    "sentiment_score": -5에서 5 사이의 전체 감정 점수
+  },
+  "conversation_topics": [
+    "주요 대화 주제들"
+  ],
+  "participant_analysis": {
+    "interaction_style": "참여자들의 상호작용 스타일 설명",
+    "communication_balance": "대화 균형도 (골고루 참여/한쪽이 주도/등)",
+    "engagement_level": "참여도 (1-10 점수)"
+  },
+  "conversation_insights": [
+    "대화에서 발견한 흥미로운 인사이트들"
+  ],
+  "recommendations": [
+    "더 나은 대화를 위한 추천사항들"
+  ]
+}
+
+분석할 때 다음을 고려하세요:
+- 한국어 대화의 뉘앙스와 문화적 맥락
+- 이모티콘과 이모지의 의미
+- 대화의 흐름과 맥락`;
+
+    const axios = require('axios');
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 1000,
+      temperature: 0.7
+    }, {
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const content = response.data.choices[0].message.content;
+    console.log('🤖 OpenAI 분석 완료');
+    
+    // JSON 파싱 시도
+    try {
+      const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      const analysis = JSON.parse(cleanContent);
+      
+      // 메타데이터 추가
+      analysis.metadata = {
+        analyzed_at: new Date(),
+        message_count: messages.length,
+        analysis_method: 'openai_gpt35',
+        room_name: room.name
+      };
+      
+      return analysis;
+    } catch (parseError) {
+      console.error('JSON 파싱 실패, 원본 텍스트 반환:', parseError.message);
+      return {
+        raw_analysis: content,
+        metadata: {
+          analyzed_at: new Date(),
+          message_count: messages.length,
+          analysis_method: 'openai_gpt35_raw',
+          room_name: room.name,
+          parse_error: parseError.message
+        }
+      };
+    }
+
+  } catch (error) {
+    console.error('OpenAI 분석 실패:', error.response?.data || error.message);
+    // 실패시 로컬 분석으로 fallback
+    return analyzeConversationLocal(messages);
+  }
+}
+
+// 로컬 분석 (fallback)
+function analyzeConversationLocal(messages) {
+  return {
+    overall_summary: `총 ${messages.length}개의 메시지로 구성된 대화입니다. (로컬 분석)`,
+    sentiment_analysis: {
+      overall_mood: "중립",
+      mood_changes: "분위기 변화 감지 불가 (로컬 분석)",
+      sentiment_score: 0
+    },
+    conversation_topics: ["일반 대화"],
+    participant_analysis: {
+      interaction_style: "분석 불가 (로컬 분석)",
+      communication_balance: "분석 불가",
+      engagement_level: 5
+    },
+    conversation_insights: ["AI 분석이 필요한 항목입니다."],
+    recommendations: ["OpenAI API 키를 설정하면 더 자세한 분석이 가능합니다."],
+    metadata: {
+      analyzed_at: new Date(),
+      message_count: messages.length,
+      analysis_method: 'local_fallback'
+    }
+  };
+}
+
+// === 기존 분석 함수들 (임시 구현) ===
 
 async function analyzeConversation(messages, newMessage) {
   // 실제로는 OpenAI/Claude API 호출
