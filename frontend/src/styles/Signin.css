@@ -1,0 +1,96 @@
+.initPageWrapper{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: hwb(323 77% 0%);}
+.backgroundBlur{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:800px;
+    height:800px;
+    background:radial-gradient(circle,#ff3396 0%, #FED1FF 40%,transparent 100%);
+    filter:blur(70px);
+    z-index:0;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+}
+.logo{
+    width:300px;
+    height:auto;
+    display:block;
+    margin:0 auto;
+    position:relative;
+    z-index:2;
+}
+.CommonBtn{
+  background:rgba(225,225,225,0.2);
+    border-radius:16px;
+    padding:32px;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.2);
+    border:1px solid rgba(255,255,255,0.18);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+    height:auto;
+  border-radius: 16px;
+  padding:10px 10px;
+  margin: 16px 20px 10px 30px;
+  cursor: pointer;
+  width:200px;
+  font-size: 20px;
+  font-weight:800;
+  color:black;
+  /*transition: background 0.2s ease;*/
+}
+
+.CommonBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+.formGrid{
+    display:grid;
+    grid-template-columns:max-content minmax(200px,1fr);
+    grid-row-gap:16px;
+    grid-column-gap:0px;
+    align-items:center;
+    width:100%;
+    max-width:360px;
+    margin:24px auto;
+}
+
+.formGrid label{
+    justify-self:end;
+    font-weight:900;
+    font-size: 24px;
+    color:#333;
+}
+.formGrid input{
+    background:rgba(225,225,225,0.2);
+    border-radius:16px;
+    padding:32px;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.2);
+    border:1px solid rgba(255,255,255,0.18);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+    height:auto;
+    border-radius: 16px;
+    padding:10px;
+    margin-left:70px;
+    cursor: pointer;
+    width:200px;
+}
