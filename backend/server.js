@@ -101,6 +101,123 @@ app.get('/', (req, res) => {
   });
 });
 
+// 데이터베이스 관리 페이지
+app.get('/admin', async (req, res) => {
+  try {
+    const { User, Room, Message, UserRoom } = require('./models');
+    
+    // 통계 정보 수집
+    const [userCount, roomCount, messageCount, userRoomCount] = await Promise.all([
+      User.count(),
+      Room.count(), 
+      Message.count(),
+      UserRoom.count()
+    ]);
+    
+    // 최근 사용자들
+    const recentUsers = await User.findAll({
+      attributes: ['id', 'username', 'email', 'created_at'],
+      order: [['created_at', 'DESC']],
+      limit: 10
+    });
+    
+    // 최근 채팅방들
+    const recentRooms = await Room.findAll({
+      attributes: ['id', 'name', 'description', 'created_at'],
+      order: [['created_at', 'DESC']],
+      limit: 5
+    });
+
+    res.send(\`
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>데이터베이스 관리자</title>
+          <style>
+              body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+              .container { max-width: 1200px; margin: 0 auto; }
+              .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+              .stat-card { background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+              .stat-number { font-size: 2em; font-weight: bold; color: #007bff; }
+              .table-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+              th { background: #f8f9fa; font-weight: bold; }
+              .refresh-btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+          </style>
+      </head>
+      <body>
+          <div class="container">
+              <h1>📊 데이터베이스 관리자</h1>
+              <button class="refresh-btn" onclick="location.reload()">🔄 새로고침</button>
+              
+              <div class="stats">
+                  <div class="stat-card">
+                      <div class="stat-number">\${userCount}</div>
+                      <div>총 사용자</div>
+                  </div>
+                  <div class="stat-card">
+                      <div class="stat-number">\${roomCount}</div>
+                      <div>총 채팅방</div>
+                  </div>
+                  <div class="stat-card">
+                      <div class="stat-number">\${messageCount}</div>
+                      <div>총 메시지</div>
+                  </div>
+                  <div class="stat-card">
+                      <div class="stat-number">\${userRoomCount}</div>
+                      <div>총 참여</div>
+                  </div>
+              </div>
+              
+              <div class="table-section">
+                  <h2>👤 최근 가입 사용자</h2>
+                  <table>
+                      <tr><th>ID</th><th>사용자명</th><th>이메일</th><th>가입일</th></tr>
+                      \${recentUsers.map(user => \`
+                          <tr>
+                              <td>\${user.id}</td>
+                              <td>\${user.username}</td>
+                              <td>\${user.email || 'N/A'}</td>
+                              <td>\${new Date(user.created_at).toLocaleString('ko-KR')}</td>
+                          </tr>
+                      \`).join('')}
+                  </table>
+              </div>
+              
+              <div class="table-section">
+                  <h2>💬 최근 생성 채팅방</h2>
+                  <table>
+                      <tr><th>ID</th><th>방 이름</th><th>설명</th><th>생성일</th></tr>
+                      \${recentRooms.map(room => \`
+                          <tr>
+                              <td>\${room.id}</td>
+                              <td>\${room.name}</td>
+                              <td>\${room.description || 'N/A'}</td>
+                              <td>\${new Date(room.created_at).toLocaleString('ko-KR')}</td>
+                          </tr>
+                      \`).join('')}
+                  </table>
+              </div>
+              
+              <div class="table-section">
+                  <h2>🔗 유용한 링크</h2>
+                  <ul>
+                      <li><a href="/api-docs">API 문서</a></li>
+                      <li><a href="/debug">디버그 페이지</a></li>
+                      <li><a href="/api/auth/users">전체 사용자 JSON</a></li>
+                      <li><a href="/health">서버 상태</a></li>
+                  </ul>
+              </div>
+          </div>
+      </body>
+      </html>
+    \`);
+  } catch (error) {
+    res.status(500).send('데이터베이스 연결 오류: ' + error.message);
+  }
+});
+
 // 프론트엔드 디버깅용 라우트
 app.get('/debug', (req, res) => {
   res.send(`
