@@ -60,8 +60,18 @@ app.use(cors({
   ],
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 요청 본문 로깅 미들웨어
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, {
+    contentType: req.headers['content-type'],
+    contentLength: req.headers['content-length'],
+    body: req.body
+  });
+  next();
+});
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 정적 파일 서빙 (테스트용)
 app.use(express.static('public'));

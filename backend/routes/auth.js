@@ -3,6 +3,22 @@ const router = express.Router();
 const { User } = require('../models');
 const { generateToken, authenticateToken } = require('../middleware/auth');
 
+// 테스트용 엔드포인트
+router.post('/test', (req, res) => {
+  console.log('테스트 요청:', {
+    body: req.body,
+    headers: req.headers,
+    method: req.method
+  });
+  
+  res.json({
+    success: true,
+    message: '테스트 성공',
+    received: req.body,
+    headers: req.headers['content-type']
+  });
+});
+
 /**
  * @swagger
  * /api/auth/register:
@@ -35,8 +51,23 @@ router.post('/register', async (req, res) => {
     console.log('회원가입 요청 받음:', {
       body: req.body,
       headers: req.headers['content-type'],
-      method: req.method
+      method: req.method,
+      rawBody: JSON.stringify(req.body)
     });
+    
+    // 요청 본문이 비어있는 경우 처리
+    if (!req.body || Object.keys(req.body).length === 0) {
+      console.error('요청 본문이 비어있음');
+      return res.status(400).json({
+        success: false,
+        message: '요청 데이터가 없습니다. Content-Type을 확인해주세요.',
+        debug: {
+          contentType: req.headers['content-type'],
+          contentLength: req.headers['content-length'],
+          body: req.body
+        }
+      });
+    }
     
     const { username, password } = req.body;
 
