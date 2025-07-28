@@ -91,8 +91,93 @@ app.get('/', (req, res) => {
     message: '채팅 분석 API 서버가 실행중입니다!',
     swagger: `${protocol}://${host}/api-docs`,
     timestamp: new Date().toISOString(),
-    status: 'healthy'
+    status: 'healthy',
+    frontend_url: 'https://minecrafton.shop',
+    test_accounts: [
+      { username: '김철수', password: 'password123' },
+      { username: '이영희', password: 'password123' },
+      { username: '박민수', password: 'password123' }
+    ]
   });
+});
+
+// 프론트엔드 디버깅용 라우트
+app.get('/debug', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>디버그 페이지</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .container { max-width: 800px; margin: 0 auto; }
+            .test-btn { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+            .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>API 테스트 페이지</h1>
+            <button class="test-btn" onclick="testRegister()">회원가입 테스트</button>
+            <button class="test-btn" onclick="testLogin()">로그인 테스트</button>
+            <button class="test-btn" onclick="clearStorage()">localStorage 초기화</button>
+            <div id="result" class="result"></div>
+        </div>
+        
+        <script>
+            function log(message) {
+                document.getElementById('result').innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+            }
+            
+            function clearStorage() {
+                localStorage.clear();
+                sessionStorage.clear();
+                log('Storage 초기화 완료');
+            }
+            
+            async function testRegister() {
+                try {
+                    const response = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: 'test' + Date.now(),
+                            password: 'test123'
+                        })
+                    });
+                    const data = await response.json();
+                    log('회원가입 결과: ' + JSON.stringify(data));
+                } catch (error) {
+                    log('회원가입 에러: ' + error.message);
+                }
+            }
+            
+            async function testLogin() {
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: '김철수',
+                            password: 'password123'
+                        })
+                    });
+                    const data = await response.json();
+                    log('로그인 결과: ' + JSON.stringify(data));
+                    
+                    if (data.success && data.token) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        log('토큰과 사용자 정보가 localStorage에 저장됨');
+                    }
+                } catch (error) {
+                    log('로그인 에러: ' + error.message);
+                }
+            }
+        </script>
+    </body>
+    </html>
+  `);
 });
 
 // 헬스체크 엔드포인트
@@ -107,6 +192,55 @@ app.get('/health', (req, res) => {
 
 // 데이터베이스 모델 초기화
 require('./models');
+
+// 초기 데이터 생성
+const initData = async () => {
+  try {
+    const { User, Room, UserRoom } = require('./models');
+    
+    // 기존 사용자 수 확인
+    const userCount = await User.count();
+    if (userCount === 0) {
+      console.log('🔧 초기 사용자 생성 중...');
+      
+      // 테스트 사용자 생성
+      const users = [];
+      const testUsers = [
+        { username: '김철수', password: 'password123' },
+        { username: '이영희', password: 'password123' },
+        { username: '박민수', password: 'password123' }
+      ];
+      
+      for (const userData of testUsers) {
+        const user = await User.create(userData);
+        users.push(user);
+      }
+      
+      // 기본 채팅방 생성
+      const room = await Room.create({
+        name: '일반 대화방',
+        description: '자유롭게 대화하는 공간입니다.',
+        created_by: users[0].id
+      });
+      
+      // 모든 사용자를 기본 채팅방에 참여시키기
+      for (const user of users) {
+        await UserRoom.create({
+          user_id: user.id,
+          room_id: room.id,
+          joined_at: new Date()
+        });
+      }
+      
+      console.log('✅ 초기 데이터 생성 완료');
+    }
+  } catch (error) {
+    console.error('❌ 초기 데이터 생성 실패:', error);
+  }
+};
+
+// 서버 시작 후 초기 데이터 생성
+setTimeout(initData, 2000);
 
 // API 라우트 연결
 app.use('/api/auth', require('./routes/auth'));
