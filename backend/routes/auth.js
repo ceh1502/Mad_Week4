@@ -105,13 +105,11 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       success: true,
       message: '회원가입이 완료되었습니다.',
-      data: {
-        user: {
-          id: newUser.id,
-          username: newUser.username
-        },
-        token
-      }
+      user: {
+        id: newUser.id,
+        username: newUser.username
+      },
+      token
     });
 
   } catch (error) {
@@ -193,13 +191,11 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       message: '로그인 성공',
-      data: {
-        user: {
-          id: user.id,
-          username: user.username
-        },
-        token
-      }
+      user: {
+        id: user.id,
+        username: user.username
+      },
+      token
     });
 
   } catch (error) {

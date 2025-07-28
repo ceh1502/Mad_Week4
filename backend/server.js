@@ -58,7 +58,10 @@ app.use(cors({
     "https://minecrafton.shop", // 운영용
     "https://www.minecrafton.shop" // www 서브도메인
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
 // 요청 본문 로깅 미들웨어
 app.use((req, res, next) => {
