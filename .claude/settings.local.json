@@ -3,7 +3,12 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(npm run dev:*)",
-      "Bash(git clone:*)"
+      "Bash(git clone:*)",
+      "Bash(git merge:*)",
+      "Bash(ls:*)",
+      "Bash(npm install)",
+      "Bash(rm:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
