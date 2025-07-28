@@ -76,10 +76,16 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('회원가입 오류:', error);
+    console.error('회원가입 오류 상세:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      sql: error.sql
+    });
     res.status(500).json({
       success: false,
-      message: '서버 오류가 발생했습니다.'
+      message: '서버 오류가 발생했습니다.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

@@ -83,6 +83,14 @@ app.get('/', (req, res) => {
 // 데이터베이스 모델 초기화
 require('./models');
 
+// 데이터베이스 테이블 동기화 (프로덕션에서 안전하게)
+const sequelize = require('./config/database');
+sequelize.sync({ alter: false }).then(() => {
+  console.log('📊 데이터베이스 테이블 동기화 완료');
+}).catch(error => {
+  console.error('❌ 데이터베이스 동기화 실패:', error);
+});
+
 // API 라우트 연결
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/friends', require('./routes/friends'));

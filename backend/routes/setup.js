@@ -28,17 +28,14 @@ router.post('/init', async (req, res) => {
     const users = await User.bulkCreate([
       {
         username: '김철수',
-        email: 'kim@test.com',
         password: 'password123'
       },
       {
         username: '이영희',
-        email: 'lee@test.com',
         password: 'password123'
       },
       {
         username: '박민수',
-        email: 'park@test.com',
         password: 'password123'
       }
     ]);
