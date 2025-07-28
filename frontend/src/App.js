@@ -1,12 +1,37 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import InitPage from './pages/InitPage.jsx';
 import Signin from './pages/Signin.jsx';
 import Signup from './pages/Signup.jsx';
+import ChatPage from './pages/ChatPage.jsx';
 import './App.css';
 
 function App() {
-  const signinRef = useRef(null);   // ✅ Signin 위치 참조
-  const signupRef = useRef(null);   // ✅ Signup 위치 참조
+  const signinRef = useRef(null);   
+  const signupRef = useRef(null);   
+  const [currentView, setCurrentView] = useState('scroll');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser));
+      setCurrentView('chat');
+    }
+  }, []);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setCurrentView('chat');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setCurrentView('scroll');
+  };
 
   const scrollToSignin = () => {
     const targetY = signinRef.current.offsetTop;
@@ -56,11 +81,15 @@ function App() {
     requestAnimationFrame(animateScroll);
   };
 
+  if (currentView === 'chat') {
+    return <ChatPage user={user} onLogout={handleLogout} />;
+  }
+
   return (
     <>
       <InitPage onSigninClick={scrollToSignin} onSignupClick={scrollToSignup} />
       <div ref={signinRef}>
-        <Signin />
+        <Signin onLoginSuccess={handleLoginSuccess} />
       </div>
       <div ref={signupRef}>
         <Signup 

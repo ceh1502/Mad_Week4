@@ -94,6 +94,10 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
                 value={formData.username}
                 onChange={handleInputChange}
                 disabled={loading}
+                autoComplete="username"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
               />
             </div>
             <div className="SignupformRow">
@@ -104,6 +108,11 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
                 value={formData.password}
                 onChange={handleInputChange}
                 disabled={loading}
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                data-lpignore="true"
               />
             </div>
           </div>
