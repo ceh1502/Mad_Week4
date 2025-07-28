@@ -77,7 +77,6 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
           <div className="photoCircle" />
           <button className="uploadBtn">사진 업로드</button>
         </div>
-
         <form onSubmit={handleSignup}>
           <div className="SignupformGrid">
             <div className="SignupformRow">
@@ -103,8 +102,8 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
                 autoCapitalize="off"
                 spellCheck="false"
               />
-            </div>
-            <div className="SignupformRow">
+              </div>
+              <div className="SignupformRow">
               <label htmlFor="pw">PW</label>
               <input 
                 type="password" 
@@ -118,30 +117,18 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
                 spellCheck="false"
                 data-lpignore="true"
               />
-            </div>
+              </div>
           </div>
           
           {error && <div style={{ color: 'red', textAlign: 'center', margin: '10px 0' }}>{error}</div>}
           
-          <div className="btnRow">
             <button 
               type="submit" 
-              className="CommonBtn"
+              className="SignupCommonBtn"
               disabled={loading}
             >
               {loading ? '가입 중...' : 'Sign Up'}
             </button>
-            {onBackToLogin && (
-              <button 
-                type="button" 
-                className="CommonBtn" 
-                onClick={onBackToLogin}
-                style={{ marginTop: '10px', background: 'rgba(255,255,255,0.1)' }}
-              >
-                로그인으로 돌아가기
-              </button>
-            )}
-          </div>
         </form>
         </div>
       </GlassPanel>
