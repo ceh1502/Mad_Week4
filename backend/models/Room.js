@@ -15,6 +15,14 @@ const Room = sequelize.define('Room', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  created_by: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
+  },
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

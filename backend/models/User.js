@@ -8,10 +8,19 @@ const User = sequelize.define('User', {
     primaryKey: true,
     autoIncrement: true
   },
+  name: {
+    type: DataTypes.STRING(50),
+    allowNull: true,  // 실명은 선택적
+  },
   username: {
     type: DataTypes.STRING(50),
     allowNull: false,
     unique: true
+  },
+  email: {
+    type: DataTypes.STRING(255),
+    allowNull: true,  // 선택적 필드로 설정
+    unique: false
   },
   password: {
     type: DataTypes.STRING(255),
