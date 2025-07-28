@@ -14,10 +14,12 @@ const Signin = ({ onLoginSuccess }) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name === 'userId' ? 'username' : name]: value
-        }));
+        console.log('Input change:', name, value); // 디버깅용
+        if (name === 'userId') {
+            setFormData(prev => ({ ...prev, username: value }));
+        } else if (name === 'password') {
+            setFormData(prev => ({ ...prev, password: value }));
+        }
     };
 
     const handleLogin = async (e) => {

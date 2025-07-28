@@ -15,10 +15,14 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id === 'id' ? 'username' : id]: value
-    }));
+    console.log('Signup input change:', id, value); // 디버깅용
+    if (id === 'name') {
+      setFormData(prev => ({ ...prev, name: value }));
+    } else if (id === 'id') {
+      setFormData(prev => ({ ...prev, username: value }));
+    } else if (id === 'pw') {
+      setFormData(prev => ({ ...prev, password: value }));
+    }
   };
 
   const handleSignup = async (e) => {
