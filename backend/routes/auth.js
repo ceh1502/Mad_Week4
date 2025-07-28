@@ -242,4 +242,37 @@ router.get('/me', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/users:
+ *   get:
+ *     summary: 모든 사용자 목록 조회 (개발용)
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: 사용자 목록 조회 성공
+ */
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: ['id', 'username', 'email', 'created_at'],
+      order: [['created_at', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      message: '사용자 목록 조회 성공',
+      count: users.length,
+      data: users
+    });
+
+  } catch (error) {
+    console.error('사용자 목록 조회 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '사용자 목록을 불러오는데 실패했습니다.'
+    });
+  }
+});
+
 module.exports = router;

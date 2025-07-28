@@ -120,6 +120,8 @@ app.get('/debug', (req, res) => {
             <h1>API 테스트 페이지</h1>
             <button class="test-btn" onclick="testRegister()">회원가입 테스트</button>
             <button class="test-btn" onclick="testLogin()">로그인 테스트</button>
+            <button class="test-btn" onclick="getUserList()">사용자 목록 조회</button>
+            <button class="test-btn" onclick="getRooms()">채팅방 목록 조회</button>
             <button class="test-btn" onclick="clearStorage()">localStorage 초기화</button>
             <div id="result" class="result"></div>
         </div>
@@ -172,6 +174,36 @@ app.get('/debug', (req, res) => {
                     }
                 } catch (error) {
                     log('로그인 에러: ' + error.message);
+                }
+            }
+            
+            async function getUserList() {
+                try {
+                    const response = await fetch('/api/auth/users');
+                    const data = await response.json();
+                    log('사용자 목록: ' + JSON.stringify(data, null, 2));
+                } catch (error) {
+                    log('사용자 목록 조회 에러: ' + error.message);
+                }
+            }
+            
+            async function getRooms() {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        log('로그인이 필요합니다.');
+                        return;
+                    }
+                    
+                    const response = await fetch('/api/rooms', {
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        }
+                    });
+                    const data = await response.json();
+                    log('채팅방 목록: ' + JSON.stringify(data, null, 2));
+                } catch (error) {
+                    log('채팅방 목록 조회 에러: ' + error.message);
                 }
             }
         </script>
