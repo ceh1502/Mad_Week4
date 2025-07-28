@@ -1,44 +1,78 @@
-import React, { useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import InitPage from './pages/InitPage.jsx';
 import Signin from './pages/Signin.jsx';
+import Signup from './pages/Signup.jsx';
+import ChatPage from './pages/ChatPage.jsx';
 import './App.css';
 
-
 function App() {
-  const scrollToSignin = () => {
-  const targetY = signinRef.current.offsetTop;
-  const duration = 1000; // 원하는 스크롤 속도 (밀리초 단위, 1000 = 1초)
-  const startY = window.scrollY;
-  const diff = targetY - startY;
-  const startTime = performance.now();
+  const [currentView, setCurrentView] = useState('init');
+  const [user, setUser] = useState(null);
 
-  const easeInOutCubic = t =>
-    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser));
+      setCurrentView('chat');
+    }
+  }, []);
 
-  const animateScroll = currentTime => {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = easeInOutCubic(progress);
-    window.scrollTo(0, startY + diff * ease);
+  const handleSigninClick = () => {
+    setCurrentView('signin');
+  };
 
-    if (progress < 1) {
-      requestAnimationFrame(animateScroll);
+  const handleSignupClick = () => {
+    setCurrentView('signup');
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentView('signin');
+  };
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setCurrentView('chat');
+  };
+
+  const handleSignupSuccess = () => {
+    setCurrentView('signin');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setCurrentView('init');
+  };
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'init':
+        return <InitPage onSigninClick={handleSigninClick} />;
+      case 'signin':
+        return (
+          <Signin 
+            onLoginSuccess={handleLoginSuccess}
+            onSignupClick={handleSignupClick}
+          />
+        );
+      case 'signup':
+        return (
+          <Signup 
+            onSignupSuccess={handleSignupSuccess}
+            onBackToLogin={handleBackToLogin}
+          />
+        );
+      case 'chat':
+        return <ChatPage user={user} onLogout={handleLogout} />;
+      default:
+        return <InitPage onSigninClick={handleSigninClick} />;
     }
   };
 
-  requestAnimationFrame(animateScroll);
-};
-
-  const signinRef = useRef(null);
-
-  return (
-    <>
-      <InitPage onSigninClick={scrollToSignin} />
-      <div ref={signinRef}>
-        <Signin />
-      </div>
-    </>
-  );
+  return <>{renderCurrentView()}</>;
 }
 
 export default App;
