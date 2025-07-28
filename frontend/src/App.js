@@ -63,7 +63,10 @@ function App() {
         <Signin />
       </div>
       <div ref={signupRef}>
-        <Signup />
+        <Signup 
+          onSignupSuccess={scrollToSignin}
+          onBackToLogin={scrollToSignin}
+        />
       </div>
     </>
   );
