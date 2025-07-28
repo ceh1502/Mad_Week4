@@ -21,7 +21,7 @@ const ChatPage = ({ user, onLogout }) => {
         });
 
         socketConnection.on('connect', () => {
-            console.log('연결됨');
+            console.log('Connected');
             loadRooms();
         });
 
@@ -56,12 +56,12 @@ const ChatPage = ({ user, onLogout }) => {
             const data = await response.json();
             setRooms(data);
         } catch (error) {
-            console.error('방 목록을 불러오는데 실패했습니다:', error);
+            console.error('Failed to load rooms:', error);
         }
     };
 
     const createRoom = () => {
-        const roomName = prompt('방 이름을 입력하세요:');
+        const roomName = prompt('Enter room name:');
         if (roomName && socket) {
             socket.emit('createRoom', { name: roomName });
         }
@@ -89,7 +89,7 @@ const ChatPage = ({ user, onLogout }) => {
             const data = await response.json();
             setMessages(data);
         } catch (error) {
-            console.error('메시지를 불러오는데 실패했습니다:', error);
+            console.error('Failed to load messages:', error);
         }
     };
 
@@ -106,7 +106,7 @@ const ChatPage = ({ user, onLogout }) => {
 
     const analyzeChat = async () => {
         if (!currentRoom) {
-            alert('방을 선택해주세요.');
+            alert('Please select a room.');
             return;
         }
         
@@ -121,10 +121,10 @@ const ChatPage = ({ user, onLogout }) => {
             });
             
             const data = await response.json();
-            setAnalysis(data.analysis || '분석 결과가 없습니다.');
+            setAnalysis(data.analysis || 'No analysis results.');
         } catch (error) {
-            console.error('분석 실패:', error);
-            setAnalysis('분석에 실패했습니다.');
+            console.error('Analysis failed:', error);
+            setAnalysis('Analysis failed.');
         } finally {
             setLoading(false);
         }
@@ -138,11 +138,11 @@ const ChatPage = ({ user, onLogout }) => {
                 <Sidebar>
                     <UserInfo>
                         <span>{user?.username}</span>
-                        <LogoutBtn onClick={onLogout}>로그아웃</LogoutBtn>
+                        <LogoutBtn onClick={onLogout}>Logout</LogoutBtn>
                     </UserInfo>
                     <RoomSection>
                         <RoomHeader>
-                            <h3>채팅방</h3>
+                            <h3>Chat Rooms</h3>
                             <CreateRoomBtn onClick={createRoom}>+</CreateRoomBtn>
                         </RoomHeader>
                         <RoomList>
@@ -159,11 +159,11 @@ const ChatPage = ({ user, onLogout }) => {
                     </RoomSection>
                     <AnalysisSection>
                         <AnalyzeBtn onClick={analyzeChat} disabled={!currentRoom || loading}>
-                            {loading ? '분석 중...' : 'AI 분석'}
+                            {loading ? 'Analyzing...' : 'AI Analysis'}
                         </AnalyzeBtn>
                         {analysis && (
                             <AnalysisResult>
-                                <h4>분석 결과:</h4>
+                                <h4>Analysis Result:</h4>
                                 <p>{analysis}</p>
                             </AnalysisResult>
                         )}
@@ -194,14 +194,14 @@ const ChatPage = ({ user, onLogout }) => {
                                         type="text"
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
-                                        placeholder="메시지를 입력하세요..."
+                                        placeholder="Enter your message..."
                                     />
-                                    <SendButton type="submit">전송</SendButton>
+                                    <SendButton type="submit">Send</SendButton>
                                 </MessageForm>
                             </>
                         ) : (
                             <WelcomeMessage>
-                                채팅방을 선택하거나 새로 만들어보세요!
+                                Select a chat room or create a new one!
                             </WelcomeMessage>
                         )}
                     </GlassPanel>

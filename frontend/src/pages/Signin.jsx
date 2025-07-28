@@ -43,10 +43,10 @@ const Signin = ({ onLoginSuccess, onSignupClick }) => {
                 onLoginSuccess(data.user);
             } else {
                 const errorData = await response.json();
-                setError(errorData.message || '로그인에 실패했습니다.');
+                setError(errorData.message || 'Login failed.');
             }
         } catch (error) {
-            setError('서버 연결에 실패했습니다.');
+            setError('Server connection failed.');
         } finally {
             setLoading(false);
         }
@@ -87,14 +87,14 @@ const Signin = ({ onLoginSuccess, onSignupClick }) => {
                     onClick={handleSubmit}
                     disabled={loading}
                 >
-                    {loading ? '로그인 중...' : 'Sign in'}
+                    {loading ? 'Signing in...' : 'Sign in'}
                 </button>
                 <button 
                     type="button" 
                     className="CommonBtn secondary" 
                     onClick={onSignupClick}
                 >
-                    회원가입
+                    Sign up
                 </button>
             </GlassPanel>
         </div>
