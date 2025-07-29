@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import FloatingHearts from '../components/FloatingHearts';
 import GlassPanel from '../components/GlassPanel';
-import FriendList from '../pages/FriendList';
+// === 고침1 - 올바른 컴포넌트 import (FriendList 대신 ChatList 사용) ===
+// import FriendList from '../pages/FriendList'; // 더미 데이터 컴포넌트 제거
+import FriendList from '../pages/ChatList'; // ChatList를 FriendList 이름으로 사용
 import ChatList   from '../pages/ChatList';
 import ChatDetail from '../pages/ChatDetail';
 import Settings   from '../pages/Settings';
@@ -57,10 +59,10 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
       if (result.success) {
         alert(`${result.data.username}님을 친구로 추가했습니다!`);
         setFriendSearchInput(''); // 입력창 초기화
-        // === 고침5 - 친구 추가 후 목록 새로고침 ===
+        // === 고침5 - 친구 추가 후 목록 새로고침 (더 부드럽게) ===
         setTimeout(() => {
-          window.location.reload(); // 간단한 페이지 새로고침
-        }, 1000);
+          window.location.reload(); // 페이지 새로고침으로 친구 목록 업데이트
+        }, 1500); // 알림을 볼 시간을 위해 1.5초 대기
       } else {
         alert('친구 추가 실패: ' + result.message);
       }
@@ -161,7 +163,8 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
                         }}
                       />
                     </div>
-                    <FriendList ref={(ref) => { window.chatListRef = ref; }} />
+                    {/* === 고침2 - FriendList는 실제로 ChatList 컴포넌트 === */}
+                    <FriendList />
                   </>
                 )}
 
