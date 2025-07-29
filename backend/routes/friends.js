@@ -73,6 +73,88 @@ router.get('/', authenticateToken, async (req, res) => {
 
 /**
  * @swagger
+ * /api/friends/search-user:
+ *   get:
+ *     summary: 사용자 검색 (아이디로 정확히 검색)
+ *     tags: [Friends]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 검색할 사용자 아이디
+ *     responses:
+ *       200:
+ *         description: 사용자 정보
+ *       404:
+ *         description: 사용자를 찾을 수 없음
+ */
+router.get('/search-user', authenticateToken, async (req, res) => {
+  try {
+    const { username } = req.query;
+    const currentUserId = req.user.id;
+
+    if (!username || username.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: '검색할 사용자 아이디를 입력해주세요.'
+      });
+    }
+
+    // 정확한 사용자명으로 검색
+    const user = await User.findOne({
+      where: {
+        username: username.trim(),
+        id: {
+          [require('sequelize').Op.ne]: currentUserId // 자기 자신 제외
+        }
+      },
+      attributes: ['id', 'name', 'username', 'email', 'created_at']
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: '해당 아이디의 사용자를 찾을 수 없습니다.'
+      });
+    }
+
+    // 이미 친구인지 확인
+    const existingFriendship = await Friendship.findOne({
+      where: {
+        user_id: currentUserId,
+        friend_id: user.id
+      }
+    });
+
+    res.json({
+      success: true,
+      message: '사용자를 찾았습니다.',
+      data: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        created_at: user.created_at,
+        isAlreadyFriend: !!existingFriendship
+      }
+    });
+
+  } catch (error) {
+    console.error('사용자 검색 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '사용자 검색 중 오류가 발생했습니다.',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
  * /api/friends/search:
  *   get:
  *     summary: 친구 검색
