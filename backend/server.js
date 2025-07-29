@@ -15,8 +15,14 @@ const io = socketIo(server, {
       "https://minecrafton.shop", // 운영용
       "https://www.minecrafton.shop" // www 서브도메인
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"]
-  }
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  },
+  // === 고침: WebSocket 연결을 위한 설정 추가 ===
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 const PORT = process.env.PORT || 4444;
