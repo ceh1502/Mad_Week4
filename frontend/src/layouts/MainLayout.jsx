@@ -57,7 +57,10 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
       if (result.success) {
         alert(`${result.data.username}님을 친구로 추가했습니다!`);
         setFriendSearchInput(''); // 입력창 초기화
-        // TODO: 친구 목록 새로고침 (나중에 ChatList 컴포넌트 연동 시 구현)
+        // === 고침5 - 친구 추가 후 목록 새로고침 ===
+        setTimeout(() => {
+          window.location.reload(); // 간단한 페이지 새로고침
+        }, 1000);
       } else {
         alert('친구 추가 실패: ' + result.message);
       }
@@ -158,7 +161,7 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
                         }}
                       />
                     </div>
-                    <FriendList />
+                    <FriendList ref={(ref) => { window.chatListRef = ref; }} />
                   </>
                 )}
 
