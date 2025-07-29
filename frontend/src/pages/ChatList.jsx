@@ -11,11 +11,11 @@ const chats= [
     { id: 6, name: 'Byungjoo', lastMessage:'안녕하세요!'},
 ];
 
-const ChatList = () => {
+const ChatList = ({ onSelect }) => {
   return (
     <div className="friendListContainer">
       {chats.map(chat => (
-        <div key={chat.id} className="friendItem">
+        <div key={chat.id} className="friendItem" onClick={()=>onSelect(chat)}>
           <div className="photoCircle" />
           <span className="friendName">{chat.name}</span>
           <span className="latestMessage">{chat.lastMessage}</span>
