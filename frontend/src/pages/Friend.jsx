@@ -15,43 +15,45 @@ const Friend = () => {
 
   return (
     <div className="FriendPageWrapper">
-    <FloatingHearts2 />
-      <div className="backgroundBlur"/>
-      <GlassPanel width="350px">
-      {/* 상단 탭 + Add 버튼 */}
-      <div className="headerRow">
-        <div className="tabSwitch">
-          <button
-            className={`tabItem ${activeTab === 'friend' ? 'active' : ''}`}
-            onClick={() => setActiveTab('friend')}
-          >
-            친구
-          </button>
-          <button
-            className={`tabItem ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chat')}
-          >
-            채팅
-          </button>
-          <button
-            className={`tabItem ${activeTab === 'flirto' ? 'active' : ''}`}
-            onClick={() => setActiveTab('flirto')}
-          >
-            Flirto
-          </button>
-        </div>
-        <button className="addButton">Add</button>
-      </div>
-
-      {/* 친구 리스트 */}
-      <div className="friendList">
-        {friends.map(friend => (
-          <div key={friend.id} className="friendItem">
-            <div className="photoCircle"></div>
-            <span className="friendName">{friend.name}</span>
+      <FloatingHearts2 />
+      <div className="backgroundBlur" />
+      <GlassPanel width="350px" height="600px">
+        <div className="glassContent">
+          {/* 상단 탭 + Add 버튼 */}
+          <div className="headerRow">
+            <div className="tabSwitch">
+              <button
+                className={`tabItem ${activeTab === 'friend' ? 'active' : ''}`}
+                onClick={() => setActiveTab('friend')}
+              >
+                친구
+              </button>
+              <button
+                className={`tabItem ${activeTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setActiveTab('chat')}
+              >
+                채팅
+              </button>
+              <button
+                className={`tabItem ${activeTab === 'flirto' ? 'active' : ''}`}
+                onClick={() => setActiveTab('flirto')}
+              >
+                Flirto
+              </button>
+            </div>
+            <button className="addButton">Add</button>
           </div>
-        ))}
-      </div>
+
+          {/* 친구 리스트 */}
+          <div className="friendList">
+            {friends.map((friend) => (
+              <div key={friend.id} className="friendItem">
+                <div className="photoCircle"></div>
+                <span className="friendName">{friend.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </GlassPanel>
     </div>
   );
