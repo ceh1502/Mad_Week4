@@ -8,10 +8,15 @@
     const [connectionError, setConnectionError] = useState(null);
 
     useEffect(() => {
-      // 소켓 연결 생성
+      // 소켓 연결 생성 - 설정 개선
       const newSocket = io(serverUrl, {
-        transports: ['websocket', 'polling'], // 연결 방법 설정
-        timeout: 20000 // 연결 타임아웃 20초
+        transports: ['polling', 'websocket'], // polling을 먼저 시도
+        timeout: 20000, // 연결 타임아웃 20초
+        forceNew: true, // 새 연결 강제
+        reconnection: true, // 자동 재연결
+        reconnectionDelay: 1000, // 재연결 딜레이
+        reconnectionAttempts: 5, // 재연결 시도 횟수
+        autoConnect: true // 자동 연결
       });
 
       // 연결 성공 이벤트

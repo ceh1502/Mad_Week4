@@ -12,10 +12,10 @@ const ChatDetail = ({ chat = {}, onBack }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // 인증 상태
   const scrollRef = useRef(null);
   
-  // Socket 연결 설정
+  // Socket 연결 설정 - 백엔드 Render 서버 주소
   const serverUrl = window.location.hostname === 'localhost'
     ? 'http://localhost:4444'  // 로컬 개발 환경
-    : 'https://minecrafton.shop'; // 프로덕션 환경 (백엔드와 같은 도메인)
+    : 'https://chat-analyzer-backend.onrender.com'; // 프로덕션 백엔드 서버
 
   const { socket, isConnected, connectionError } = useSocket(serverUrl);
 

@@ -13,7 +13,8 @@ const io = socketIo(server, {
     origin: [
       "http://localhost:3000", // 개발용
       "https://minecrafton.shop", // 운영용
-      "https://www.minecrafton.shop" // www 서브도메인
+      "https://www.minecrafton.shop", // www 서브도메인
+      "https://chat-analyzer-backend.onrender.com" // 백엔드 자체 도메인
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
@@ -62,7 +63,8 @@ app.use(cors({
   origin: [
     "http://localhost:3000", // 개발용
     "https://minecrafton.shop", // 운영용
-    "https://www.minecrafton.shop" // www 서브도메인
+    "https://www.minecrafton.shop", // www 서브도메인
+    "https://chat-analyzer-backend.onrender.com" // 백엔드 자체 도메인
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
