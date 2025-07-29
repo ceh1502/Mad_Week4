@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import FloatingHearts from '../components/FloatingHearts';
 import GlassPanel from '../components/GlassPanel';
-// === 고침1 - 올바른 컴포넌트 import (FriendList 대신 ChatList 사용) ===
+// === 고침1 - 중복 import 수정 ===
 // import FriendList from '../pages/FriendList'; // 더미 데이터 컴포넌트 제거
-import FriendList from '../pages/ChatList'; // ChatList를 FriendList 이름으로 사용
-import ChatList   from '../pages/ChatList';
+import ChatList from '../pages/ChatList'; // 친구 목록용 (API 연동)
+import RealChatList from '../pages/RealChatList'; // 채팅방 목록용
 import ChatDetail from '../pages/ChatDetail';
 import Settings   from '../pages/Settings';
 import { FaSearch } from 'react-icons/fa';
@@ -151,7 +151,7 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
                         className="searchInput"
                         value={friendSearchInput}
                         onChange={(e) => setFriendSearchInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
+                        onKeyDown={handleKeyPress}
                         disabled={isAddingFriend}
                       />
                       <FaSearch 
@@ -163,14 +163,16 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
                         }}
                       />
                     </div>
-                    {/* === 고침2 - FriendList는 실제로 ChatList 컴포넌트 === */}
-                    <FriendList />
+                    {/* === 고침2 - 친구 탭에 onSelect 추가하고 친구 클릭 시 채팅방 생성 === */}
+                    <ChatList onSelect={(chat) => {
+                      setSelectedChat(chat);
+                    }} />
                   </>
                 )}
 
-                {/* 채팅 탭: 채팅 리스트 (클릭 시 상세 모드 진입) */}
+                {/* === 고침3 - 채팅 탭: 실제 채팅방 목록 컴포넌트 사용 === */}
                 {activeTab==='chat' && (
-                  <ChatList onSelect={(chat) => {
+                  <RealChatList onSelect={(chat) => {
                     setSelectedChat(chat);
                   }} />
                 )}
