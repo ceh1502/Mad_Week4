@@ -2,16 +2,75 @@ import React, { useRef, useState, useEffect } from 'react';
 import InitPage from './pages/InitPage.jsx';
 import Signin from './pages/Signin.jsx';
 import Signup from './pages/Signup.jsx';
-import ChatPage from './pages/ChatPage.jsx';
-import Friend from './pages/Friend.jsx';
+import ChatList from './pages/ChatList.jsx';
+import FriendList from './pages/FriendList.jsx';
+import Settings from './pages/Settings.jsx';
+import FloatingHearts from './components/FloatingHearts';
+import GlassPanel from './components/GlassPanel';
+import { FaSearch } from 'react-icons/fa';
+import { FlirtoProvider, useFlirto } from './context/FlirtoContext';
 import './App.css';
+
+function MainLayout({ user, onLogout }) {
+  const [activeTab, setActiveTab] = useState('friend');
+  const { isFlirtoOn } = useFlirto();
+
+  const renderMainPanel = () => {
+    if (!isFlirtoOn) {
+      return <div className="flirtoOffMessage">Flirto를 켜보세요!</div>;
+    }
+    if (activeTab === 'friend') return <FriendList />;
+    if (activeTab === 'chat') return <ChatList />;
+    if (activeTab === 'settings') return <Settings />;
+  };
+
+  return (
+    <div className="FriendPageWrapper">
+      <FloatingHearts />
+      <div className="backgroundBlur" />
+
+      <div className="layoutWrapper">
+        {/* 좌측 패널 */}
+        <GlassPanel width="250px" height="100vh">
+          <div className="sidebarContent">
+            <div className="searchBar">
+              <input type="text" placeholder="친구 검색" className="searchInput" />
+              <FaSearch className="searchIcon" />
+            </div>
+
+            <div className="tabSwitch">
+              <button className={`tabItem ${activeTab === 'friend' ? 'active' : ''}`} onClick={() => setActiveTab('friend')}>
+                친구
+              </button>
+              <button className={`tabItem ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>
+                채팅
+              </button>
+              <button className={`tabItem ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+                Flirto
+              </button>
+            </div>
+
+            <button onClick={onLogout} className="logoutBtn">로그아웃</button>
+          </div>
+        </GlassPanel>
+
+        {/* 우측 메인 패널 */}
+        <div className="mainPanel">
+          <GlassPanel width="calc(100% - 100px)" height="100vh">
+            {renderMainPanel()}
+          </GlassPanel>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const signinRef = useRef(null);   
   const signupRef = useRef(null);   
   const [currentView, setCurrentView] = useState('scroll');
   const [user, setUser] = useState(null);
-  const [previewView, setPreviewView] = useState(null); // 🔥 추가
+  const [previewView, setPreviewView] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -19,7 +78,7 @@ function App() {
     
     if (token && savedUser) {
       setUser(JSON.parse(savedUser));
-      setCurrentView('chat');
+      setCurrentView('friend');
     }
   }, []);
 
@@ -36,64 +95,34 @@ function App() {
   };
 
   const scrollToSignin = () => {
-    const targetY = signinRef.current.offsetTop;
-    const duration = 1000;
-    const startY = window.scrollY;
-    const diff = targetY - startY;
-    const startTime = performance.now();
-
-    const easeInOutCubic = t =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-    const animateScroll = currentTime => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = easeInOutCubic(progress);
-      window.scrollTo(0, startY + diff * ease);
-
-      if (progress < 1) {
-        requestAnimationFrame(animateScroll);
-      }
-    };
-
-    requestAnimationFrame(animateScroll);
+    window.scrollTo({ top: signinRef.current.offsetTop, behavior: 'smooth' });
   };
 
   const scrollToSignup = () => {
-    const targetY = signupRef.current.offsetTop;
-    const duration = 1000;
-    const startY = window.scrollY;
-    const diff = targetY - startY;
-    const startTime = performance.now();
-
-    const easeInOutCubic = t =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-    const animateScroll = currentTime => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = easeInOutCubic(progress);
-      window.scrollTo(0, startY + diff * ease);
-
-      if (progress < 1) {
-        requestAnimationFrame(animateScroll);
-      }
-    };
-
-    requestAnimationFrame(animateScroll);
+    window.scrollTo({ top: signupRef.current.offsetTop, behavior: 'smooth' });
   };
 
   // 🔥 미리보기 모드
   if (previewView === 'signin') return <Signin />;
   if (previewView === 'signup') return <Signup />;
-  if (previewView === 'friend') return <Friend />;
-  if (previewView === 'chat') return <ChatPage />;
+  if (previewView === 'friend') return (
+    <FlirtoProvider>
+      <MainLayout user={user} onLogout={handleLogout} />
+    </FlirtoProvider>
+  );
+  if (previewView === 'chat') return (
+    <FlirtoProvider>
+      <MainLayout user={user} onLogout={handleLogout} />
+    </FlirtoProvider>
+  );
 
-  if (currentView === 'chat') {
-    return <ChatPage user={user} onLogout={handleLogout} />;
-  }
+  // 로그인 완료 시
   if (currentView === 'friend') {
-    return <Friend user={user} onLogout={handleLogout} />;
+    return (
+      <FlirtoProvider>
+        <MainLayout user={user} onLogout={handleLogout} />
+      </FlirtoProvider>
+    );
   }
 
   return (
@@ -107,6 +136,7 @@ function App() {
         <button onClick={() => setPreviewView(null)}>Reset</button>
       </div>
 
+      {/* 초기 화면 */}
       <InitPage onSigninClick={scrollToSignin} onSignupClick={scrollToSignup} />
       <div ref={signinRef}>
         <Signin onLoginSuccess={handleLoginSuccess} />
