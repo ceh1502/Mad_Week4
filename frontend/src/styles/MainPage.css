@@ -146,3 +146,11 @@
   color: #fff;
   font-weight: bold;
 }
+
+.latestMessage {
+  margin-left: auto;
+  color: #666666;
+  font-weight:bold;
+  font-size: 14px;
+}
+
