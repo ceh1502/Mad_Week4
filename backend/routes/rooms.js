@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Room, UserRoom, User, Message, sequelize } = require('../models');
+const { Room, UserRoom, User, Message } = require('../models');
+const sequelize = require('../config/database'); // === 고침 - sequelize 인스턴스 정확히 import ===
 const { authenticateToken } = require('../middleware/auth');
 
 /**
@@ -155,14 +156,14 @@ router.post('/direct', authenticateToken, async (req, res) => {
       LIMIT 1
     `;
     
-    const [roomResults] = await sequelize.query(userRoomsQuery, {
+    const roomResults = await sequelize.query(userRoomsQuery, {
       replacements: [userId, friendId],
       type: sequelize.QueryTypes.SELECT
     });
     
     let existingRoom = null;
-    if (roomResults) {
-      existingRoom = await Room.findByPk(roomResults.room_id);
+    if (roomResults && roomResults.length > 0) {
+      existingRoom = await Room.findByPk(roomResults[0].room_id);
     }
 
     if (existingRoom) {
