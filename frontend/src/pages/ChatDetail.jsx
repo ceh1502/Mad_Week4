@@ -6,11 +6,22 @@ import '../styles/ChatDetail.css';
 import useSocket from '../hooks/useSocket';
 
 const ChatDetail = ({ chat = {}, onBack }) => {
-  // === 이건고침: 상태 및 Socket 연결 설정 ===
+  // === 고침1: 상태 및 Socket 연결 설정 + 사용자 정보 안전하게 파싱 ===
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(chat.messages || []); // 메시지 상태 관리
   const [isAuthenticated, setIsAuthenticated] = useState(false); // 인증 상태
   const scrollRef = useRef(null);
+  
+  // 안전한 사용자 정보 파싱
+  const getCurrentUser = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (error) {
+      console.error('사용자 정보 파싱 실패:', error);
+      return null;
+    }
+  };
   
   // Socket 연결 설정 - 백엔드 Render 서버 주소
   const serverUrl = window.location.hostname === 'localhost'
@@ -19,69 +30,103 @@ const ChatDetail = ({ chat = {}, onBack }) => {
 
   const { socket, isConnected, connectionError } = useSocket(serverUrl);
 
-  // === 이건고침: Socket 인증 및 채팅방 입장 로직 추가 ===
+  // === 고침2: Socket 인증 및 채팅방 입장 로직 수정 (중복 등록 방지) ===
+  useEffect(() => {
+    // 채팅방 변경 시 인증 상태 초기화
+    setIsAuthenticated(false);
+    setMessages([]); // 메시지도 초기화
+  }, [chat.id]);
+  
   useEffect(() => {
     if (socket && isConnected && !isAuthenticated) {
       const token = localStorage.getItem('token');
-      if (token) {
-        // JWT 토큰으로 인증
-        socket.emit('authenticate', { token });
+      const currentUser = getCurrentUser();
+      
+      if (!token || !currentUser) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+      
+      // 채팅방 ID 검증
+      if (!chat.id || isNaN(chat.id)) {
+        console.error('유효하지 않은 채팅방 ID:', chat.id);
+        return;
+      }
+      
+      // JWT 토큰으로 인증
+      socket.emit('authenticate', { token });
+      
+      // 인증 완료 이벤트 리스너
+      const handleAuthenticated = (data) => {
+        console.log('✅ 인증 성공:', data);
+        setIsAuthenticated(true);
         
-        // 인증 완료 이벤트 리스너
-        socket.on('authenticated', (data) => {
-          console.log('✅ 인증 성공:', data);
-          setIsAuthenticated(true);
-          
-          // 채팅방 입장 (chat.id가 roomId)
-          if (chat.id) {
-            socket.emit('join-room', { roomId: chat.id });
-          }
-        });
-        
-        // 인증 실패 이벤트 리스너
-        socket.on('auth-error', (error) => {
-          console.error('❌ 인증 실패:', error);
-          alert('로그인이 필요합니다.');
-        });
-        
-        // 채팅방 입장 완료 이벤트
-        socket.on('room-joined', (data) => {
-          console.log('🏠 채팅방 입장 완료:', data);
-          // 기존 메시지 로드
-          if (data.messages) {
+        // 채팅방 입장 (chat.id가 roomId)
+        socket.emit('join-room', { roomId: chat.id });
+      };
+      
+      // 인증 실패 이벤트 리스너
+      const handleAuthError = (error) => {
+        console.error('❌ 인증 실패:', error);
+        alert('로그인이 필요합니다.');
+        setIsAuthenticated(false);
+      };
+      
+      // 채팅방 입장 완료 이벤트
+      const handleRoomJoined = (data) => {
+        console.log('🏠 채팅방 입장 완료:', data);
+        // 기존 메시지 로드
+        if (data.messages) {
+          const currentUser = getCurrentUser();
+          if (currentUser) {
             setMessages(data.messages.map(msg => ({
               id: msg.id,
               text: msg.message,
-              sender: msg.user_id === JSON.parse(localStorage.getItem('user')).id ? 'me' : 'other',
+              sender: msg.user_id === currentUser.id ? 'me' : 'other',
               timestamp: msg.created_at,
               username: msg.user?.username
             })));
           }
-        });
-        
-        // 실시간 메시지 수신
-        socket.on('receive-message', (message) => {
-          console.log('📨 새 메시지 수신:', message);
+        }
+      };
+      
+      // 실시간 메시지 수신
+      const handleReceiveMessage = (message) => {
+        console.log('📨 새 메시지 수신:', message);
+        const currentUser = getCurrentUser();
+        if (currentUser) {
           setMessages(prev => [...prev, {
             id: message.id,
             text: message.message,
-            sender: message.user_id === JSON.parse(localStorage.getItem('user')).id ? 'me' : 'other',
+            sender: message.user_id === currentUser.id ? 'me' : 'other',
             timestamp: message.created_at,
             username: message.user?.username
           }]);
-        });
-      }
+        }
+      };
+      
+      // 에러 처리 리스너
+      const handleError = (error) => {
+        console.error('Socket 에러:', error);
+        alert('오류가 발생했습니다: ' + error.message);
+      };
+      
+      // 이벤트 리스너 등록
+      socket.on('authenticated', handleAuthenticated);
+      socket.on('auth-error', handleAuthError);
+      socket.on('room-joined', handleRoomJoined);
+      socket.on('receive-message', handleReceiveMessage);
+      socket.on('error', handleError);
+      
+      // 컴포넌트 언마운트 시 이벤트 리스너 정리
+      return () => {
+        socket.off('authenticated', handleAuthenticated);
+        socket.off('auth-error', handleAuthError);
+        socket.off('room-joined', handleRoomJoined);
+        socket.off('receive-message', handleReceiveMessage);
+        socket.off('error', handleError);
+      };
     }
-    
-    // 컴포넌트 언마운트 시 이벤트 리스너 정리
-    return () => {
-      if (socket) {
-        socket.off('authenticated');
-        socket.off('auth-error');
-        socket.off('room-joined');
-        socket.off('receive-message');
-      }
-    };
   }, [socket, isConnected, isAuthenticated, chat.id]);
   
   // 새 메시지가 생기면 맨 아래로 스크롤
@@ -111,14 +156,7 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       message: input.trim()
     });
     
-    // 에러 처리를 위한 일회성 리스너
-    const errorHandler = (error) => {
-      console.error('메시지 전송 실패:', error);
-      alert('메시지 전송에 실패했습니다: ' + error.message);
-      socket.off('error', errorHandler);
-    };
-    
-    socket.on('error', errorHandler);
+    // === 고침3: 에러 처리 리스너 제거 (이미 전역 에러 리스너가 있음) ===
     
     // 입력창 초기화
     setInput('');
