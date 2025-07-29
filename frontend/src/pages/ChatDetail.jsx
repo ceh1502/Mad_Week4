@@ -13,7 +13,11 @@ const ChatDetail = ({ chat = {}, onBack }) => {
   const scrollRef = useRef(null);
   
   // Socket 연결 설정
-  const { socket, isConnected, connectionError } = useSocket('http://localhost:4444');
+  const serverUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:4444'  // 로컬 개발 환경
+    : 'https://minecrafton.shop'; // 프로덕션 환경 (백엔드와 같은 도메인)
+
+  const { socket, isConnected, connectionError } = useSocket(serverUrl);
 
   // === 이건고침: Socket 인증 및 채팅방 입장 로직 추가 ===
   useEffect(() => {
