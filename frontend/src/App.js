@@ -3,6 +3,7 @@ import InitPage from './pages/InitPage.jsx';
 import Signin from './pages/Signin.jsx';
 import Signup from './pages/Signup.jsx';
 import FriendList from './pages/FriendList.jsx';
+import ChatList from './pages/ChatList.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import { FlirtoProvider } from './context/FlirtoContext';
 import './App.css';
@@ -45,23 +46,17 @@ function App() {
   };
 
   // 🔥 미리보기 모드
-  // App.jsx 중간 부분
-// 🔥 미리보기 모드
 if (previewView === 'signin') return <Signin />;
 if (previewView === 'signup') return <Signup />;
-if (previewView === 'friend') {
-  return (
-    <FlirtoProvider>
-      <MainLayout user={user} onLogout={handleLogout} />
-    </FlirtoProvider>
-  );
-}
-if (previewView === 'chat') {
-  return (
-    <FlirtoProvider>
-      <MainLayout user={user} onLogout={handleLogout} />
-    </FlirtoProvider>
-  );
+if (previewView === 'friend'||previewView==='chat') {
+ return(
+  <FlirtoProvider>
+    <MainLayout 
+    user={user} 
+    onLogout={handleLogout} 
+    defaultTab={previewView} />
+  </FlirtoProvider>
+ );
 }
 
 

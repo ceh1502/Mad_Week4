@@ -9,13 +9,13 @@ import { FaSearch } from 'react-icons/fa';
 import { useFlirto } from '../context/FlirtoContext';
 import '../styles/MainPage.css';
 
-const MainLayout = ({ user, onLogout }) => {
-  const [activeTab, setActiveTab] = useState('friend');
+const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const { isFlirtoOn } = useFlirto();
 
   const renderRightPanel = () => {
     if (!isFlirtoOn) return <div className="flirtoView">Flirto를 켜보세요!</div>;
-    if (activeTab === 'chat')    return <ChatList user={user} />;
+    if (activeTab === 'chat')    return <div>채팅 내용을 여기에 표시하세요</div>;
     if (activeTab === 'settings')return <Settings />;
     return <div className="emptyView">친구를 선택해보세요</div>;
   };
@@ -29,15 +29,7 @@ const MainLayout = ({ user, onLogout }) => {
         {/* 좌측 패널 */}
         <GlassPanel width="250px" height="100vh">
           <div className="sidebarContent">
-            <div className="searchBar">
-              <input
-                type="text"
-                placeholder="친구 검색"
-                className="searchInput"
-              />
-              <FaSearch className="searchIcon" />
-            </div>
-
+            {/* 탭 버튼 */}
             <div className="tabSwitch">
               <button
                 className={`tabItem ${activeTab==='friend'?'active':''}`}
@@ -53,9 +45,31 @@ const MainLayout = ({ user, onLogout }) => {
               >설정</button>
             </div>
 
-            {/* 여기서 FriendList만 렌더링 */}
-            {activeTab==='friend' && <FriendList />}
-              <button className="logoutBtn" onClick={onLogout}>
+            {/* 친구 탭에서만 검색창 + 친구 목록 */}
+            {activeTab === 'friend' && (
+              <>
+                <div className="searchBar">
+                  <input
+                    type="text"
+                    placeholder="친구 검색"
+                    className="searchInput"
+                  />
+                  <FaSearch className="searchIcon" />
+                </div>
+                <FriendList />
+              </>
+            )}
+
+            {/* 채팅 탭에서만 채팅 목록 */}
+            {activeTab === 'chat' && (
+              <ChatList />
+            )}
+
+            {/* 설정 탭에서만 설정 */}
+            {activeTab === 'settings' && <Settings />}
+
+            {/* 로그아웃 버튼은 항상 */}
+            <button className="logoutBtn" onClick={onLogout}>
               로그아웃
             </button>
           </div>
