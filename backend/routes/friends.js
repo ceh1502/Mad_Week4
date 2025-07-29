@@ -235,9 +235,10 @@ router.get('/search', authenticateToken, async (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               friendId:
- *                 type: integer
- *                 description: 추가할 친구의 사용자 ID
+ *               friendUsername:
+ *                 type: string
+ *                 example: "ceh1502"
+ *                 description: 추가할 친구의 사용자 아이디(username)
  *     responses:
  *       200:
  *         description: 친구 추가 성공
@@ -249,21 +250,24 @@ router.get('/search', authenticateToken, async (req, res) => {
 router.post('/add', authenticateToken, async (req, res) => {
   try {
     const currentUserId = req.user.id;
-    const { friendId } = req.body;
+    const { friendUsername } = req.body;
 
-    if (!friendId || friendId === currentUserId) {
+    if (!friendUsername || friendUsername.trim() === '' || friendUsername === req.user.username) {
       return res.status(400).json({
         success: false,
-        message: '유효하지 않은 친구 ID입니다.'
+        message: '유효한 친구 아이디를 입력해주세요.'
       });
     }
 
-    // 친구로 추가할 사용자 확인
-    const friendUser = await User.findByPk(friendId);
+    // 친구로 추가할 사용자 확인 (username으로 검색)
+    const friendUser = await User.findOne({
+      where: { username: friendUsername.trim() }
+    });
+    
     if (!friendUser) {
       return res.status(404).json({
         success: false,
-        message: '해당 사용자를 찾을 수 없습니다.'
+        message: '해당 아이디의 사용자를 찾을 수 없습니다.'
       });
     }
 
@@ -271,7 +275,7 @@ router.post('/add', authenticateToken, async (req, res) => {
     const existingFriendship = await Friendship.findOne({
       where: {
         user_id: currentUserId,
-        friend_id: friendId
+        friend_id: friendUser.id
       }
     });
 
@@ -286,11 +290,11 @@ router.post('/add', authenticateToken, async (req, res) => {
     await Friendship.bulkCreate([
       {
         user_id: currentUserId,
-        friend_id: friendId,
+        friend_id: friendUser.id,
         status: 'accepted'
       },
       {
-        user_id: friendId,
+        user_id: friendUser.id,
         friend_id: currentUserId,
         status: 'accepted'
       }
@@ -301,6 +305,7 @@ router.post('/add', authenticateToken, async (req, res) => {
       message: `${friendUser.username}님을 친구로 추가했습니다.`,
       data: {
         id: friendUser.id,
+        name: friendUser.name,
         username: friendUser.username,
         email: friendUser.email
       }

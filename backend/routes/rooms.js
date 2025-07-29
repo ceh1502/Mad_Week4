@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Room, UserRoom, User, Message } = require('../models');
+const { Room, UserRoom, User, Message, sequelize } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
 
 /**
@@ -66,9 +66,10 @@ router.get('/', authenticateToken, async (req, res) => {
 
 /**
  * @swagger
- * /api/rooms:
+ * /api/rooms/direct:
  *   post:
- *     summary: 새 채팅방 생성
+ *     summary: 1:1 채팅방 찾기/생성
+ *     description: 두 사용자 간의 1:1 채팅방을 찾거나 새로 생성합니다. 이미 존재하면 기존 방을 반환하고, 없으면 새로 생성합니다.
  *     tags: [Rooms]
  *     security:
  *       - bearerAuth: []
@@ -79,64 +80,134 @@ router.get('/', authenticateToken, async (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               friendUsername:
  *                 type: string
- *                 example: "새 채팅방"
- *               description:
- *                 type: string
- *                 example: "새로운 채팅방입니다"
+ *                 example: "ceh1502"
+ *                 description: 채팅할 친구의 사용자 아이디(username)
  *     responses:
+ *       200:
+ *         description: 기존 1:1 채팅방 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                     created_at:
+ *                       type: string
  *       201:
- *         description: 채팅방 생성 성공
+ *         description: 새 1:1 채팅방 생성 성공
  *       400:
  *         description: 입력 오류
+ *       404:
+ *         description: 친구를 찾을 수 없음
  */
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/direct', authenticateToken, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { friendUsername } = req.body;
     const userId = req.user.id;
 
-    if (!name || !name.trim()) {
+    // 입력 검증
+    if (!friendUsername || friendUsername.trim() === '' || friendUsername === req.user.username) {
       return res.status(400).json({
         success: false,
-        message: '채팅방 이름을 입력해주세요.'
+        message: '유효한 친구 아이디를 입력해주세요.'
       });
     }
 
-    // 채팅방 생성
+    // 친구 존재 확인 (username으로 검색)
+    const friend = await User.findOne({
+      where: { username: friendUsername.trim() }
+    });
+    
+    if (!friend) {
+      return res.status(404).json({
+        success: false,
+        message: '해당 아이디의 사용자를 찾을 수 없습니다.'
+      });
+    }
+
+    const friendId = friend.id;
+
+    // 기존 1:1 채팅방 찾기 (두 사용자가 모두 참여한 방)
+    const existingRoom = await Room.findOne({
+      include: [{
+        model: UserRoom,
+        as: 'userRooms',
+        where: {
+          user_id: [userId, friendId]
+        },
+        required: true
+      }],
+      having: sequelize.literal('COUNT(DISTINCT user_rooms.user_id) = 2'),
+      group: ['Room.id', 'userRooms.id']
+    });
+
+    if (existingRoom) {
+      // 기존 채팅방이 있으면 반환
+      return res.json({
+        success: true,
+        message: '기존 채팅방을 찾았습니다.',
+        data: {
+          id: existingRoom.id,
+          name: existingRoom.name,
+          created_at: existingRoom.created_at
+        }
+      });
+    }
+
+    // 새 1:1 채팅방 생성
+    const roomName = `${req.user.username}님과 ${friend.username}님의 채팅`;
     const newRoom = await Room.create({
-      name: name.trim(),
-      description: description || '',
+      name: roomName,
+      description: '1:1 개인 채팅방',
       created_by: userId
     });
 
-    // 생성자를 채팅방에 자동 참여
-    await UserRoom.create({
-      user_id: userId,
-      room_id: newRoom.id,
-      joined_at: new Date()
-    });
+    // 두 사용자를 채팅방에 참여시키기
+    await UserRoom.bulkCreate([
+      {
+        user_id: userId,
+        room_id: newRoom.id,
+        joined_at: new Date()
+      },
+      {
+        user_id: friendId,
+        room_id: newRoom.id,
+        joined_at: new Date()
+      }
+    ]);
 
     res.status(201).json({
       success: true,
-      message: '채팅방이 생성되었습니다.',
+      message: '새 채팅방이 생성되었습니다.',
       data: {
         id: newRoom.id,
         name: newRoom.name,
-        description: newRoom.description,
         created_at: newRoom.created_at
       }
     });
 
   } catch (error) {
-    console.error('채팅방 생성 오류:', error);
+    console.error('1:1 채팅방 생성 오류:', error);
     res.status(500).json({
       success: false,
-      message: '채팅방 생성에 실패했습니다.',
+      message: '1:1 채팅방 생성에 실패했습니다.',
       error: error.message
     });
   }
 });
+
 
 /**
  * @swagger
