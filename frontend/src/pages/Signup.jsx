@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import FloatingHearts2 from '../components/FloatingHearts2';
+import FloatingHearts from '../components/FloatingHearts';
 import '../styles/Signup.css';
 import GlassPanel from '../components/GlassPanel';
 import logo from '../assets/logo.png';
@@ -75,13 +75,13 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
 
   return (
     <div className="initPageWrapper">
-      <FloatingHearts2 />
+      <FloatingHearts />
       <div className="backgroundBlur" />
-      <GlassPanel width="480px">
+      <GlassPanel width="800px" height="400px">
         <img src={logo} alt="logo" className="logo" />
         <div className="SignupContent">
         <div className="photoUpload">
-          <div className="photoCircle" />
+          <div className="SignupphotoCircle" />
           <button className="uploadBtn">사진 업로드</button>
         </div>
         <form onSubmit={handleSignup}>

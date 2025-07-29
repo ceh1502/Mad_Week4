@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import FloatingHearts2 from '../components/FloatingHearts2';
+import FloatingHearts from '../components/FloatingHearts';
 import '../styles/Signin.css';
 import GlassPanel from '../components/GlassPanel';
 import logo from '../assets/logo.png';
@@ -66,9 +66,9 @@ const Signin = ({ onLoginSuccess }) => {
 
     return (
         <div className="initPageWrapper">
-            <FloatingHearts2 />
+            <FloatingHearts />
             <div className="backgroundBlur" />
-            <GlassPanel width="480px">
+            <GlassPanel width="800px" height="400px">
                 <img src={logo} alt="logo" className="logo" />
                 <form className="SigninformGrid" onSubmit={handleLogin}>
                     <label className="Inputlabel" htmlFor="userId">ID</label>

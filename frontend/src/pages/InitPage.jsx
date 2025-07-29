@@ -9,10 +9,10 @@ const InitPage=({onSigninClick,onSignupClick})=>{
         <div className="initPageWrapper">
             <FloatingHearts />
             <div className="backgroundBlur"/>
-            <GlassPanel width="480px">
+            <GlassPanel width="800px" height="400px">
                 <img src={logo}alt="logo" className="logo" />
-                <button onClick={onSigninClick}className="CommonBtn"> Sign in </button>
-                <button onClick={onSignupClick}className="CommonBtn"> Sign up</button>
+                <button onClick={onSigninClick}className="InitCommonBtn"> Sign in </button>
+                <button onClick={onSignupClick}className="InitCommonBtn"> Sign up</button>
             </GlassPanel>
         </div>
     );

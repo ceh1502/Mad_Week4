@@ -8,9 +8,9 @@ import heart4 from '../assets/heart4.png';
 
 const FloatingHearts2=()=>{
     const hearts = [
-        { id: 1, left: '-5%', top: '10%', size: 500, src: heart1 },
-        { id: 2, left: '50%', top: '0%', size: 800, src: heart2 },
-        { id: 3, left: '70%', top: '50%', size: 500, src: heart3 },
+        { id: 1, left: '-10%', top: '-5%', size: 500, src: heart1 },
+        { id: 2, left: '50%', top: '-8%', size: 700, src: heart2 },
+        { id: 3, left: '70%', top: '50%', size: 450, src: heart3 },
         { id: 4, left: '0%', top: '50%', size: 700, src: heart4 },
     ];
 
