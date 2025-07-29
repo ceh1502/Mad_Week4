@@ -139,19 +139,31 @@ router.post('/direct', authenticateToken, async (req, res) => {
 
     const friendId = friend.id;
 
-    // 기존 1:1 채팅방 찾기 (두 사용자가 모두 참여한 방)
-    const existingRoom = await Room.findOne({
-      include: [{
-        model: UserRoom,
-        as: 'userRooms',
-        where: {
-          user_id: [userId, friendId]
-        },
-        required: true
-      }],
-      having: sequelize.literal('COUNT(DISTINCT user_rooms.user_id) = 2'),
-      group: ['Room.id', 'userRooms.id']
+    // === 고침 - 1:1 채팅방 찾기 로직 단순화 ===
+    // 두 사용자가 모두 참여한 방 중에서 참여자가 정확히 2명인 방 찾기
+    const userRoomsQuery = `
+      SELECT room_id, COUNT(*) as participant_count
+      FROM UserRooms 
+      WHERE room_id IN (
+        SELECT DISTINCT ur1.room_id 
+        FROM UserRooms ur1
+        INNER JOIN UserRooms ur2 ON ur1.room_id = ur2.room_id
+        WHERE ur1.user_id = ? AND ur2.user_id = ?
+      )
+      GROUP BY room_id
+      HAVING COUNT(*) = 2
+      LIMIT 1
+    `;
+    
+    const [roomResults] = await sequelize.query(userRoomsQuery, {
+      replacements: [userId, friendId],
+      type: sequelize.QueryTypes.SELECT
     });
+    
+    let existingRoom = null;
+    if (roomResults) {
+      existingRoom = await Room.findByPk(roomResults.room_id);
+    }
 
     if (existingRoom) {
       // 기존 채팅방이 있으면 반환
