@@ -3,6 +3,7 @@ import InitPage from './pages/InitPage.jsx';
 import Signin from './pages/Signin.jsx';
 import Signup from './pages/Signup.jsx';
 import ChatPage from './pages/ChatPage.jsx';
+import Friend from './pages/Friend.jsx';
 import './App.css';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
   const signupRef = useRef(null);   
   const [currentView, setCurrentView] = useState('scroll');
   const [user, setUser] = useState(null);
+  const [previewView, setPreviewView] = useState(null); // 🔥 추가
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -23,7 +25,7 @@ function App() {
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
-    setCurrentView('chat');
+    setCurrentView('friend');
   };
 
   const handleLogout = () => {
@@ -81,12 +83,30 @@ function App() {
     requestAnimationFrame(animateScroll);
   };
 
+  // 🔥 미리보기 모드
+  if (previewView === 'signin') return <Signin />;
+  if (previewView === 'signup') return <Signup />;
+  if (previewView === 'friend') return <Friend />;
+  if (previewView === 'chat') return <ChatPage />;
+
   if (currentView === 'chat') {
     return <ChatPage user={user} onLogout={handleLogout} />;
+  }
+  if (currentView === 'friend') {
+    return <Friend user={user} onLogout={handleLogout} />;
   }
 
   return (
     <>
+      {/* 미리보기 버튼 */}
+      <div style={{ position: 'fixed', top: 10, right: 10, zIndex: 999 }}>
+        <button onClick={() => setPreviewView('signin')}>Signin UI</button>
+        <button onClick={() => setPreviewView('signup')}>Signup UI</button>
+        <button onClick={() => setPreviewView('friend')}>Friend UI</button>
+        <button onClick={() => setPreviewView('chat')}>Chat UI</button>
+        <button onClick={() => setPreviewView(null)}>Reset</button>
+      </div>
+
       <InitPage onSigninClick={scrollToSignin} onSignupClick={scrollToSignup} />
       <div ref={signinRef}>
         <Signin onLoginSuccess={handleLoginSuccess} />

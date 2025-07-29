@@ -1,0 +1,139 @@
+.FriendPageWrapper{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: hwb(323 77% 0%);}
+.backgroundBlur{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:800px;
+    height:800px;
+    background:radial-gradient(circle,#ff3396 0%, #FED1FF 40%,transparent 100%);
+    filter:blur(70px);
+    z-index:0;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+}
+
+/* Header row */
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap:80px;
+}
+
+/* 탭 스위치 */
+.tabSwitch {
+  display: flex;
+  gap: 20px;
+  flex:1;
+}
+
+.tabItem {
+  background: none;
+  border: none;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 16px;
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.tabItem.active {
+  color: #FF6E6E;
+}
+
+.tabItem.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #FF6E6E;
+  border-radius: 2px;
+}
+
+/* Add 버튼 */
+.addButton {
+  background: rgba(255, 255, 255, 0.5);
+  color: #FF6E6E;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* 친구 리스트 */
+.friendList {
+  width: 100%;
+  max-height: 500px; /* GlassPanel 높이에 맞춘 최대값 */
+  overflow-y: auto;  /* 친구가 많을 때만 스크롤 */
+  padding-right: 8px;
+  margin-top: 10px;
+}
+
+.friendList .friendItem:last-child {
+  border-bottom: none; /* 마지막 항목은 구분선 제거 */
+}
+
+.friendList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.friendList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.friendItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 30px;
+  padding-top:30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8); /* 진하게 */
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* 사진 영역 */
+.photoCircle {
+  width: 100px;
+  height: 100px;
+  border-radius: 10%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /*box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);*/
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  margin-right:70px;
+}
+
+.friendName {
+  margin-left: 16px;
+  font-size: 24px;
+  color: #000;
+  font-weight: bold;
+}
+
+.glassContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
