@@ -37,3 +37,32 @@
   justify-content: center;
   align-items: center;
 }
+/* MainPage.css 에 이미 있는 원본 스타일 */
+.friendList {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.friendItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+}
+
+.photoCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+}
+
+.friendName {
+  font-weight: 500;
+  color: #fff;
+}
+

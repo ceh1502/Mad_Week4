@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import InitPage from './pages/InitPage.jsx';
 import Signin from './pages/Signin.jsx';
 import Signup from './pages/Signup.jsx';
+import FriendList from './pages/FriendList.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import { FlirtoProvider } from './context/FlirtoContext';
 import './App.css';
@@ -44,15 +45,25 @@ function App() {
   };
 
   // 🔥 미리보기 모드
-  if (previewView === 'signin') return <Signin />;
-  if (previewView === 'signup') return <Signup />;
-  if (previewView === 'friend' || previewView === 'chat') {
-    return (
-      <FlirtoProvider>
-        <MainLayout user={user} onLogout={handleLogout} />
-      </FlirtoProvider>
-    );
-  }
+  // App.jsx 중간 부분
+// 🔥 미리보기 모드
+if (previewView === 'signin') return <Signin />;
+if (previewView === 'signup') return <Signup />;
+if (previewView === 'friend') {
+  return (
+    <FlirtoProvider>
+      <MainLayout user={user} onLogout={handleLogout} />
+    </FlirtoProvider>
+  );
+}
+if (previewView === 'chat') {
+  return (
+    <FlirtoProvider>
+      <MainLayout user={user} onLogout={handleLogout} />
+    </FlirtoProvider>
+  );
+}
+
 
   // 로그인 완료 시
   if (currentView === 'friend') {
