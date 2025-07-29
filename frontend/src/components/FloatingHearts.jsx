@@ -6,7 +6,7 @@ import heart2 from '../assets/rightdownHeart.png';
 import heart3 from '../assets/leftHeart.png';
 
 const hearts = [
-    { id: 1, left: '70%', top:'0%', size: 500, src: heart1 },
+    { id: 1, left: '70%', top:'0%', size: 600, src: heart1 },
     { id: 2, left: '70%', top: '45%', size: 500, src: heart2 },
     { id: 3, left: '-10%', top: '0%', size: 900, src: heart3 },
 ];
