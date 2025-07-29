@@ -15,7 +15,8 @@
       "Bash(cp:*)",
       "Bash(mkdir:*)",
       "Bash(curl:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }
