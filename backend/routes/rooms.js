@@ -140,15 +140,15 @@ router.post('/direct', authenticateToken, async (req, res) => {
 
     const friendId = friend.id;
 
-    // === 고침 - 1:1 채팅방 찾기 로직 단순화 ===
+    // === 고침 - 1:1 채팅방 찾기 로직 단순화 (테이블명 수정) ===
     // 두 사용자가 모두 참여한 방 중에서 참여자가 정확히 2명인 방 찾기
     const userRoomsQuery = `
       SELECT room_id, COUNT(*) as participant_count
-      FROM UserRooms 
+      FROM user_rooms 
       WHERE room_id IN (
         SELECT DISTINCT ur1.room_id 
-        FROM UserRooms ur1
-        INNER JOIN UserRooms ur2 ON ur1.room_id = ur2.room_id
+        FROM user_rooms ur1
+        INNER JOIN user_rooms ur2 ON ur1.room_id = ur2.room_id
         WHERE ur1.user_id = ? AND ur2.user_id = ?
       )
       GROUP BY room_id
