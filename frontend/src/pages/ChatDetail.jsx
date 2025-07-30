@@ -39,6 +39,7 @@ const ChatDetail = ({ chat = {}, onBack }) => {
 
   // === 고침2: Socket 인증 및 채팅방 입장 로직 수정 (중복 등록 방지) ===
   useEffect(() => {
+    console.log('채팅방 변경됨:', chat.id);
     // 채팅방 변경 시 인증 상태 초기화
     setIsAuthenticated(false);
     setMessages([]); // 메시지도 초기화
@@ -69,6 +70,7 @@ const ChatDetail = ({ chat = {}, onBack }) => {
         setIsAuthenticated(true);
         
         // 채팅방 입장 (chat.id가 roomId)
+        console.log('🚪 채팅방 입장 요청:', { roomId: chat.id });
         socket.emit('join-room', { roomId: chat.id });
       };
       
@@ -82,25 +84,55 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       // 채팅방 입장 완료 이벤트
       const handleRoomJoined = (data) => {
         console.log('🏠 채팅방 입장 완료:', data);
+        console.log('받은 메시지 개수:', data.messages?.length || 0);
+        
         // 기존 메시지 로드
-        if (data.messages) {
+        if (data.messages && data.messages.length > 0) {
           const currentUser = getCurrentUser();
+          console.log('메시지 로딩 시 현재 사용자:', currentUser);
+          
           if (currentUser) {
-            setMessages(data.messages.map(msg => ({
+            const loadedMessages = data.messages.map(msg => ({
               id: msg.id,
               text: msg.message,
               sender: msg.user_id === currentUser.id ? 'me' : 'other',
               timestamp: msg.created_at,
               username: msg.user?.username
-            })));
+            }));
+            
+            console.log('로드된 메시지들:', loadedMessages);
+            setMessages(loadedMessages);
+          } else {
+            console.error('현재 사용자 정보가 없어서 메시지를 로드할 수 없음');
           }
+        } else {
+          console.log('로드할 메시지가 없음');
+          setMessages([]); // 빈 배열로 초기화
         }
       };
       
       // 이벤트 리스너 등록
+      console.log('🎯 인증 관련 이벤트 리스너 등록');
       socket.on('authenticated', handleAuthenticated);
       socket.on('auth-error', handleAuthError);
       socket.on('room-joined', handleRoomJoined);
+      
+      // 모든 socket 이벤트를 로깅 (디버깅용)
+      const originalEmit = socket.emit;
+      socket.emit = function(...args) {
+        console.log('📤 Socket emit:', args[0], args[1]);
+        return originalEmit.apply(this, args);
+      };
+      
+      // 모든 수신 이벤트 로깅
+      const originalOn = socket.on;
+      socket.on = function(event, handler) {
+        const wrappedHandler = function(...args) {
+          console.log('📥 Socket receive:', event, args[0]);
+          return handler.apply(this, args);
+        };
+        return originalOn.call(this, event, wrappedHandler);
+      };
       
       // 컴포넌트 언마운트 시 이벤트 리스너 정리
       return () => {
