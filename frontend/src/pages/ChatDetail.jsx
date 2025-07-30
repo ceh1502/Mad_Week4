@@ -97,6 +97,25 @@ const ChatDetail = ({ chat = {}, onBack }) => {
         }
       };
       
+      // 이벤트 리스너 등록
+      socket.on('authenticated', handleAuthenticated);
+      socket.on('auth-error', handleAuthError);
+      socket.on('room-joined', handleRoomJoined);
+      
+      // 컴포넌트 언마운트 시 이벤트 리스너 정리
+      return () => {
+        socket.off('authenticated', handleAuthenticated);
+        socket.off('auth-error', handleAuthError);
+        socket.off('room-joined', handleRoomJoined);
+      };
+    }
+  }, [socket, isConnected, isAuthenticated, chat.id]);
+
+  // 메시지 수신 이벤트 리스너를 별도 useEffect로 분리
+  useEffect(() => {
+    if (socket && isAuthenticated) {
+      console.log('메시지 수신 리스너 등록');
+      
       // 실시간 메시지 수신
       const handleReceiveMessage = (message) => {
         console.log('📨 새 메시지 수신:', message);
@@ -131,22 +150,17 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       };
       
       // 이벤트 리스너 등록
-      socket.on('authenticated', handleAuthenticated);
-      socket.on('auth-error', handleAuthError);
-      socket.on('room-joined', handleRoomJoined);
       socket.on('receive-message', handleReceiveMessage);
       socket.on('error', handleError);
       
       // 컴포넌트 언마운트 시 이벤트 리스너 정리
       return () => {
-        socket.off('authenticated', handleAuthenticated);
-        socket.off('auth-error', handleAuthError);
-        socket.off('room-joined', handleRoomJoined);
+        console.log('메시지 수신 리스너 해제');
         socket.off('receive-message', handleReceiveMessage);
         socket.off('error', handleError);
       };
     }
-  }, [socket, isConnected, isAuthenticated, chat.id]);
+  }, [socket, isAuthenticated]);
   
   // 새 메시지가 생기면 맨 아래로 스크롤
   useEffect(() => {
