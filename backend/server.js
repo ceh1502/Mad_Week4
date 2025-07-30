@@ -13,10 +13,17 @@ const io = socketIo(server, {
     origin: [
       "http://localhost:3000", // 개발용
       "https://minecrafton.shop", // 운영용
-      "https://www.minecrafton.shop" // www 서브도메인
+      "https://www.minecrafton.shop", // www 서브도메인
+      "https://chat-analyzer-backend.onrender.com" // 백엔드 자체 도메인
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"]
-  }
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  },
+  // === 고침: WebSocket 연결을 위한 설정 추가 ===
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 const PORT = process.env.PORT || 4444;
@@ -56,7 +63,8 @@ app.use(cors({
   origin: [
     "http://localhost:3000", // 개발용
     "https://minecrafton.shop", // 운영용
-    "https://www.minecrafton.shop" // www 서브도메인
+    "https://www.minecrafton.shop", // www 서브도메인
+    "https://chat-analyzer-backend.onrender.com" // 백엔드 자체 도메인
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -343,49 +351,15 @@ app.get('/health', (req, res) => {
 // 데이터베이스 모델 초기화
 require('./models');
 
-// 초기 데이터 생성
+// === 수정: 더미 데이터 자동 생성 비활성화 ===
+// 친구 추가 기능을 위해 깨끗한 상태로 시작
 const initData = async () => {
   try {
-    const { User, Room, UserRoom } = require('./models');
-    
-    // 기존 사용자 수 확인
-    const userCount = await User.count();
-    if (userCount === 0) {
-      console.log('🔧 초기 사용자 생성 중...');
-      
-      // 테스트 사용자 생성
-      const users = [];
-      const testUsers = [
-        { name: '김철수', username: 'kimcheolsu', password: 'password123' },
-        { name: '이영희', username: 'leeyounghee', password: 'password123' },
-        { name: '박민수', username: 'parkminsu', password: 'password123' }
-      ];
-      
-      for (const userData of testUsers) {
-        const user = await User.create(userData);
-        users.push(user);
-      }
-      
-      // 기본 채팅방 생성
-      const room = await Room.create({
-        name: '일반 대화방',
-        description: '자유롭게 대화하는 공간입니다.',
-        created_by: users[0].id
-      });
-      
-      // 모든 사용자를 기본 채팅방에 참여시키기
-      for (const user of users) {
-        await UserRoom.create({
-          user_id: user.id,
-          room_id: room.id,
-          joined_at: new Date()
-        });
-      }
-      
-      console.log('✅ 초기 데이터 생성 완료');
-    }
+    console.log('📊 데이터베이스 연결 확인 완료');
+    console.log('🎯 친구 추가 기능을 위해 더미 데이터 생성을 건너뜁니다.');
+    console.log('💡 사용자는 회원가입 후 친구 추가 기능을 사용할 수 있습니다.');
   } catch (error) {
-    console.error('❌ 초기 데이터 생성 실패:', error);
+    console.error('❌ 초기화 확인 실패:', error);
   }
 };
 
