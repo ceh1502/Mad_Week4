@@ -309,10 +309,6 @@ function analyzeFlirtoLocal(messages, currentUserId) {
   }
   
   // 두 번째 줄 - 구체적인 행동 분석
-  const emojiCount = otherMessages.reduce((count, msg) => {
-    const content = msg.content || msg.message || '';
-    return count + (content.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|😊|😍|❤️|💕|👍|😄|😆|🥰|ㅎㅎ|ㅋㅋ|ㅜㅜ|ㅠㅠ/gu) || []).length;
-  }, 0);
   
   const questionCount = otherMessages.reduce((count, msg) => {
     const content = msg.content || msg.message || '';
