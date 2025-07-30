@@ -24,6 +24,7 @@ const FlirtoAnalysis = ({ selectedChat }) => {
 
     // 중복 분석 방지 (같은 채팅방을 연속으로 분석하는 것 방지)
     if (lastAnalyzedChatId === selectedChat.id && analysisState === 'success') {
+      // eslint-disable-next-line no-restricted-globals
       const reAnalyze = confirm('이미 분석한 채팅방입니다. 다시 분석하시겠습니까?');
       if (!reAnalyze) {
         return;
