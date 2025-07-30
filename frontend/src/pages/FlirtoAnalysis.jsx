@@ -150,7 +150,7 @@ const FlirtoAnalysis = ({ selectedChat }) => {
         {/* 코멘트 */}
         <div className="comments">
           <h3>💬 Comments</h3>
-          <p>{analysisResult.comment}</p>
+          <p style={{ whiteSpace: 'pre-line' }}>{analysisResult.comment}</p>
         </div>
 
         {/* 분석 점수 */}
