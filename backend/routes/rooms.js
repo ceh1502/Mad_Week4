@@ -193,7 +193,10 @@ router.post('/direct', authenticateToken, async (req, res) => {
     }
 
     // 새 1:1 채팅방 생성
-    const roomName = `${req.user.username}님과 ${friend.username}님의 채팅`;
+    // 이름(name)이 있으면 이름을 사용하고, 없으면 username 사용
+    const currentUserName = req.user.name || req.user.username;
+    const friendName = friend.name || friend.username;
+    const roomName = `${currentUserName}님과 ${friendName}님의 채팅`;
     const newRoom = await Room.create({
       name: roomName,
       description: '1:1 개인 채팅방',

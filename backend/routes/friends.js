@@ -48,7 +48,7 @@ router.get('/', authenticateToken, async (req, res) => {
       include: [{
         model: User,
         as: 'friend',
-        attributes: ['id', 'username', 'email', 'created_at']
+        attributes: ['id', 'name', 'username', 'email', 'created_at']
       }],
       order: [['created_at', 'DESC']]
     });

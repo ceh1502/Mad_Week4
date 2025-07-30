@@ -41,7 +41,7 @@ const ChatList = ({ onSelect }) => {
         const formattedFriends = result.data.map(friend => ({
           id: friend.id, // 사용자 ID 추가 (고양이 아바타용)
           username: friend.username,
-          name: friend.username, // UI에서 이름으로 표시
+          name: friend.name || friend.username, // 회원가입 시 입력한 이름 우선 표시
           lastMessage: '채팅하기'
         }));
         setFriends(formattedFriends);
