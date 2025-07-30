@@ -50,6 +50,23 @@ const initDatabase = async () => {
     await sequelize.authenticate();
     console.log('✅ 데이터베이스 연결 성공');
     
+    // 연결된 데이터베이스 정보 출력
+    const dbConfig = sequelize.config;
+    console.log('🏢 연결된 데이터베이스:', {
+      database: dbConfig.database,
+      host: dbConfig.host,
+      port: dbConfig.port,
+      dialect: dbConfig.dialect,
+      ssl: !!dbConfig.dialectOptions?.ssl
+    });
+    
+    // 환경변수 확인
+    console.log('🔍 환경변수 확인:', {
+      DATABASE_URL: !!process.env.DATABASE_URL,
+      DB_HOST: !!process.env.DB_HOST,
+      NODE_ENV: process.env.NODE_ENV
+    });
+    
     // 테이블 자동 생성
     await sequelize.sync({ force: false, alter: true });
     console.log('🔧 데이터베이스 테이블 동기화 완료');
