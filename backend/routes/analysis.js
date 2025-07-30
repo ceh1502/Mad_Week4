@@ -176,38 +176,40 @@ async function analyzeFlirtoWithGemini(messages, currentUserId) {
     .map(msg => `[${msg.user_id === currentUserId ? '나' : otherUser}] ${msg.content || msg.message}`)
     .join('\n');
 
-  const prompt = `당신은 연애 상담 전문가입니다. 다음은 썸을 타고 있는 사람들의 1:1 채팅 대화입니다. 이 대화를 분석해주세요.
+  const prompt = `너는 연애 고수 친구야. 내가 썸 타는 사람이랑 나눈 대화를 보여줄게. 솔직하게 이 상황이 어떤지 분석해주고, 뭐라고 답장하면 좋을지 추천해줘.
 
 대화 내용:
 ${conversationText}
 
-분석 요청사항:
-1. Comment: "지금 썸을 타고있는 상대방이랑 이야기 중인데 너가 보기에는 상황이 어때? 3줄로 설명해줘" 라는 질문에 답하듯이 현실적이고 구체적으로 분석해주세요.
+요청사항:
+1. 이 대화 상황을 보고 솔직하게 어떤지 3줄 정도로 말해줘. 마치 친한 친구가 "야 이거 봐봐, 어떻게 생각해?" 하고 물어보는 것처럼 자연스럽게 답해줘.
 
-2. 전체 대화 흐름과 맥락을 파악한 후, 상대방의 마지막 메시지에 자연스럽게 이어질 수 있는 실제 사용할 수 있는 답변 3개를 추천해주세요. 대화의 주제, 분위기, 상대방의 관심사를 모두 고려해주세요.
+2. 상대방의 호감도, 관심도, 친밀도를 0-100 점수로 매겨줘.
 
-다음 형식의 JSON으로만 응답해주세요:
+3. 이 대화 흐름 보고 뭐라고 답장하면 좋을지 3개 추천해줘. 너무 뻔하거나 어색하지 않은, 실제로 쓸 수 있는 자연스러운 답변으로.
+
+다음 JSON 형식으로만 답해줘:
 {
-  "comment": "3줄로 현재 상황 분석 (예: '상대방이 대화에 적극적으로 참여하고 있어요.\\n이모티콘이나 질문을 자주 써서 관심을 보이는 것 같아요.\\n하지만 아직 깊은 이야기보다는 가벼운 대화 수준이에요.')",
+  "comment": "친구처럼 자연스럽게 상황 분석 (3줄 정도, \\n으로 줄바꿈)",
   "analysis": {
-    "호감도": 0-100 사이의 숫자,
-    "관심도": 0-100 사이의 숫자,
-    "친밀도": 0-100 사이의 숫자
+    "호감도": 0-100 점수,
+    "관심도": 0-100 점수,
+    "친밀도": 0-100 점수
   },
   "suggestions": [
-    "전체 대화 맥락을 고려한 자연스러운 답변 1",
-    "대화 주제와 분위기에 맞는 답변 2", 
-    "상대방 관심사를 반영한 매력적인 답변 3"
+    "자연스러운 답변 1",
+    "자연스러운 답변 2", 
+    "자연스러운 답변 3"
   ]
 }
 
-분석 기준:
-- 호감도: 이모티콘, 칭찬, 관심 표현, 대화 지속 노력
-- 관심도: 질문, 개인적 이야기, 적극적 반응
-- 친밀도: 편안한 말투, 농담, 개인정보 공유
-- 추천 답변: 전체 대화 맥락, 주제, 분위기를 종합적으로 고려하여 상대방의 마지막 메시지에 자연스럽게 이어지는 실용적이고 매력적인 답변
+분석할 때 이런 거 봐줘:
+- 호감도: 이모티콘, 긍정적 반응, 대화 지속 의지
+- 관심도: 질문하기, 개인적 얘기, 적극적 반응
+- 친밀도: 편한 말투, 농담, 개인정보 공유
+- 답변 추천: 대화 맥락에 자연스럽게 이어지면서 관계 발전에 도움되는 실용적인 답변
 
-반드시 JSON 형식으로만 응답하고, comment는 \\n으로 줄바꿈해주세요.`;
+JSON만 응답하고 다른 말은 하지 마.`;
 
   try {
     const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -294,30 +296,44 @@ function analyzeFlirtoLocal(messages, currentUserId) {
   관심도 = Math.max(20, Math.min(90, 관심도));
   친밀도 = Math.max(20, Math.min(90, 친밀도));
   
-  // 현실적인 상황 분석 코멘트 생성
+  // 친구처럼 자연스러운 상황 분석 코멘트 생성
   let situationComment = '';
-  if (호감도 >= 70) {
-    situationComment += '상대방이 이모티콘이나 긍정적인 반응을 많이 보이고 있어요.\\n';
-  } else if (호감도 >= 50) {
-    situationComment += '상대방이 대화에 어느 정도 관심을 보이고 있는 것 같아요.\\n';
+  
+  // 첫 번째 줄 - 전반적인 느낌
+  if (호감도 >= 70 && 관심도 >= 70) {
+    situationComment += '음.. 이 대화 보니까 상대방이 당신한테 꽤 관심있어 보이는데?\n';
+  } else if (호감도 >= 50 || 관심도 >= 50) {
+    situationComment += '이 대화 흐름 보면 나쁘지 않은 것 같아.\n';
   } else {
-    situationComment += '상대방이 아직은 조금 조심스럽게 대화하는 느낌이에요.\\n';
+    situationComment += '아직은 서로 탐색하는 단계인 것 같네.\n';
   }
   
-  if (관심도 >= 70) {
-    situationComment += '질문도 자주 하고 대화를 이어가려고 노력하는 게 보여요.\\n';
-  } else if (관심도 >= 50) {
-    situationComment += '가끔 질문하면서 관심을 표현하고 있어요.\\n';
+  // 두 번째 줄 - 구체적인 행동 분석
+  const emojiCount = otherMessages.reduce((count, msg) => {
+    const content = msg.content || msg.message || '';
+    return count + (content.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|😊|😍|❤️|💕|👍|😄|😆|🥰|ㅎㅎ|ㅋㅋ|ㅜㅜ|ㅠㅠ/gu) || []).length;
+  }, 0);
+  
+  const questionCount = otherMessages.reduce((count, msg) => {
+    const content = msg.content || msg.message || '';
+    return count + (content.includes('?') || content.includes('뭐') || content.includes('어떻') ? 1 : 0);
+  }, 0);
+  
+  if (emojiCount > 2 && questionCount > 1) {
+    situationComment += '이모티콘도 쓰고 질문도 던지면서 대화 이어가려고 하잖아.\n';
+  } else if (emojiCount > 0 || questionCount > 0) {
+    situationComment += '반응도 나쁘지 않고 어느 정도 관심 보이는 느낌이야.\n';
   } else {
-    situationComment += '아직 깊은 관심보다는 가벼운 대화 수준인 것 같아요.\\n';
+    situationComment += '아직은 조심스럽게 대화하는 느낌이네.\n';
   }
   
+  // 세 번째 줄 - 현재 단계와 조언
   if (친밀도 >= 70) {
-    situationComment += '대화가 자연스럽고 편안한 분위기예요.';
+    situationComment += '분위기도 편해 보이니까 좀 더 적극적으로 가도 될 것 같아!';
   } else if (친밀도 >= 50) {
-    situationComment += '서서히 편해지고 있는 단계인 것 같아요.';
+    situationComment += '서서히 친해지고 있는 단계인 것 같으니까 천천히 가봐.';
   } else {
-    situationComment += '아직은 서로 탐색하는 단계인 것 같아요.';
+    situationComment += '아직 초기 단계니까 너무 부담스럽지 않게 대화해봐.';
   }
   
   // 전체 대화 맥락을 고려한 추천 답변 생성
@@ -339,33 +355,39 @@ function analyzeFlirtoLocal(messages, currentUserId) {
     
     // 대화 맥락과 마지막 메시지를 종합적으로 고려
     if (lastContent.includes('?')) {
-      // 질문에 대한 답변 (주제별로 다르게)
+      // 질문에 대한 자연스러운 답변
       if (conversationTopics.food) {
         suggestions = [
-          "저도 그거 좋아해요! 어디서 먹어봤어요?",
-          "맛있겠다~ 저도 가보고싶네요",
-          "다음에 같이 먹으러 가요?"
+          "저도 그거 완전 좋아해요! 어디 맛집 아세요?",
+          "와 맛있겠다ㅠㅠ 저도 가보고싶어요",
+          친밀도 > 60 ? "다음에 같이 먹으러 갈까요?" : "추천해주세요!"
         ];
       } else if (conversationTopics.hobby) {
         suggestions = [
-          "오~ 저도 그런 거 관심있어요!",
-          "어떤 게 제일 재미있던가요?",
-          "언제부터 시작하셨어요?"
+          "헐 저도 그거 관심있었는데!",
+          "어떤 게 제일 재미있어요?",
+          "저도 해보고싶네요 ㅎㅎ"
+        ];
+      } else if (conversationTopics.work) {
+        suggestions = [
+          "아 저도 요즘 일이 좀 바빠서 공감돼요",
+          "고생 많으시네요ㅠㅠ",
+          "일 끝나고 뭐하면서 스트레스 푸세요?"
         ];
       } else {
         suggestions = [
-          "좋은 질문이네요! 저는 " + (conversationTopics.work ? "요즘 일이 좀 바빠서..." : "평소에는..."),
-          "음.. 생각해보니 " + (conversationTopics.weekend ? "주말에는..." : "그런 건..."),
-          "그런 건 어떤가요? " + (친밀도 > 60 ? "같이 해볼까요?" : "")
+          "좋은 질문이네요! 저는 평소에...",
+          "음.. 생각해보니 그런 것 같아요",
+          "그건 어떻게 생각하세요?"
         ];
       }
     } else if (lastContent.includes('ㅎㅎ') || lastContent.includes('ㅋㅋ')) {
-      // 웃음 표현에 대한 반응 (대화 분위기 고려)
+      // 웃음 표현에 자연스럽게 반응
       if (친밀도 > 60) {
         suggestions = [
-          "ㅋㅋㅋ 진짜 웃기네요!",
-          "저도 빵 터졌어요 😂",
-          "아 너무 재밌다 ㅎㅎㅎ"
+          "ㅋㅋㅋ 진짜 웃기네요",
+          "저도 빵터졌어요 😂",
+          "아ㅋㅋ 너무 재밌어요"
         ];
       } else {
         suggestions = [
@@ -375,45 +397,45 @@ function analyzeFlirtoLocal(messages, currentUserId) {
         ];
       }
     } else if (emojiPattern.test(lastContent)) {
-      // 이모티콘이 있는 메시지 (호감도에 따라)
+      // 이모티콘에 자연스럽게 반응
       if (호감도 > 70) {
         suggestions = [
-          "저도 그런 생각이에요 😊",
-          "완전 공감해요! 👍",
-          "그러게요~ 좋네요 ㅎㅎ"
+          "저도 완전 공감이에요 😊",
+          "맞아요! 정말 그래요 👍",
+          "그러게요~ 좋네요"
         ];
       } else {
         suggestions = [
           "맞아요 😊",
-          "공감해요!",
+          "저도 그렇게 생각해요",
           "그렇네요 ㅎㅎ"
         ];
       }
     } else {
-      // 일반적인 메시지 (대화 주제와 친밀도 고려)
+      // 일반 메시지에 자연스럽게 반응
       if (conversationTopics.food && 친밀도 > 50) {
         suggestions = [
-          "와 맛있겠다! 저도 먹고싶어요",
-          "다음에 추천해주세요 😊",
-          "같이 먹으러 가요!"
+          "와 완전 맛있겠다! 저도 먹고싶어요",
+          "그거 어디서 파는 거예요?",
+          친밀도 > 70 ? "다음에 같이 먹으러 가요!" : "추천해주세요!"
         ];
       } else if (conversationTopics.work) {
         suggestions = [
-          "고생 많으셨어요!",
-          "저도 요즘 바빠서 공감돼요",
-          "푹 쉬시고 힘내세요 😊"
+          "헉 고생 많으시네요ㅠㅠ",
+          "저도 요즘 일이 바빠서 완전 공감이에요",
+          "얼른 퇴근하시고 푹 쉬세요!"
         ];
       } else if (conversationTopics.weekend) {
         suggestions = [
-          "주말 잘 보내세요!",
-          "저도 쉬고싶네요 ㅎㅎ",
-          "뭐 하실 예정이에요?"
+          "주말 뭐하세요? 부럽네요",
+          "저도 쉬고싶어요ㅠㅠ",
+          "주말 계획 있으세요?"
         ];
       } else {
         suggestions = [
-          "오~ 그렇구나요!",
-          "더 자세히 얘기해주세요",
-          "흥미롭네요! " + (친밀도 > 60 ? "저도 관심있어요" : "")
+          "오 그래요? 신기하네요",
+          "더 자세히 알려주세요!",
+          친밀도 > 60 ? "저도 완전 관심있어요" : "흥미로워요"
         ];
       }
     }
