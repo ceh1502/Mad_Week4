@@ -1,4 +1,4 @@
-.layoutContainer {
+/*.layoutContainer {
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -6,7 +6,6 @@
   overflow: hidden;
 }
 
-/* 배경 효과 */
 .backgroundBlur {
   position: absolute;
   top: 50%;
