@@ -12,6 +12,13 @@ const ChatDetail = ({ chat = {}, onBack }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // 인증 상태
   const scrollRef = useRef(null);
   
+  // 디버깅용 로그
+  console.log('ChatDetail 렌더링:', { 
+    chatId: chat.id, 
+    messagesCount: messages.length,
+    messages: messages
+  });
+  
   // 안전한 사용자 정보 파싱
   const getCurrentUser = () => {
     try {
@@ -94,14 +101,26 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       const handleReceiveMessage = (message) => {
         console.log('📨 새 메시지 수신:', message);
         const currentUser = getCurrentUser();
+        console.log('현재 사용자:', currentUser);
+        
         if (currentUser) {
-          setMessages(prev => [...prev, {
+          const newMessage = {
             id: message.id,
             text: message.message,
             sender: message.user_id === currentUser.id ? 'me' : 'other',
             timestamp: message.created_at,
             username: message.user?.username
-          }]);
+          };
+          console.log('새 메시지 객체:', newMessage);
+          
+          setMessages(prev => {
+            console.log('이전 메시지들:', prev);
+            const updated = [...prev, newMessage];
+            console.log('업데이트된 메시지들:', updated);
+            return updated;
+          });
+        } else {
+          console.error('현재 사용자를 찾을 수 없음');
         }
       };
       
@@ -156,8 +175,6 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       message: input.trim()
     });
     
-    // === 고침3: 에러 처리 리스너 제거 (이미 전역 에러 리스너가 있음) ===
-    
     // 입력창 초기화
     setInput('');
   };
@@ -183,6 +200,10 @@ const ChatDetail = ({ chat = {}, onBack }) => {
 
       {/* 메시지 리스트 */}
       <div className="chatMessages" ref={scrollRef}>
+        {/* 디버깅용 메시지 개수 표시 */}
+        <div style={{padding: '10px', background: '#f0f0f0', fontSize: '12px'}}>
+          메시지 개수: {messages.length}
+        </div>
         {/* === 아건고침: 메시지 렌더링에 사용자명 추가 === */}
         {messages.map((msg, i) => {
           const prev = messages[i - 1];

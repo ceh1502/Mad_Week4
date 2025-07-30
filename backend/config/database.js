@@ -33,11 +33,11 @@ const sequelize = process.env.DATABASE_URL
           underscored: true,
         }
       })
-    : new Sequelize('chat_analyzer', 'root', '', {
+    : new Sequelize('chat_analyzer', process.env.USER || 'postgres', '', {
         host: 'localhost',
-        dialect: 'mysql',
+        port: 5432,
+        dialect: 'postgres',
         logging: false,
-        timezone: '+09:00',
         define: {
           timestamps: false,
           underscored: true,
