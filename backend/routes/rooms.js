@@ -21,6 +21,7 @@ const { authenticateToken } = require('../middleware/auth');
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log(`📋 사용자 ${userId}의 채팅방 목록 조회 요청`);
 
     const userRooms = await UserRoom.findAll({
       where: { user_id: userId },
@@ -41,6 +42,16 @@ router.get('/', authenticateToken, async (req, res) => {
       }]
     });
 
+    console.log(`💬 찾은 UserRoom 개수: ${userRooms.length}`);
+    
+    if (userRooms.length > 0) {
+      console.log(`🏠 채팅방 목록:`, userRooms.map(ur => ({
+        roomId: ur.room_id,
+        roomName: ur.room?.name,
+        joinedAt: ur.joined_at
+      })));
+    }
+
     const rooms = userRooms.map(userRoom => ({
       id: userRoom.room.id,
       name: userRoom.room.name,
@@ -49,6 +60,8 @@ router.get('/', authenticateToken, async (req, res) => {
       last_message: userRoom.room.messages[0] || null,
       joined_at: userRoom.joined_at
     }));
+
+    console.log(`📤 응답할 채팅방 데이터:`, rooms);
 
     res.json({
       success: true,

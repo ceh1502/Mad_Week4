@@ -14,6 +14,9 @@ const RealChatList = ({ onSelect }) => {
       setError(null);
       
       const token = localStorage.getItem('token');
+      console.log('🔑 저장된 토큰 확인:', token ? '토큰 있음' : '토큰 없음');
+      console.log('🔑 토큰 길이:', token ? token.length : 0);
+      
       if (!token) {
         setError('로그인이 필요합니다.');
         setChatRooms([]);
@@ -25,6 +28,7 @@ const RealChatList = ({ onSelect }) => {
         : 'https://chat-analyzer-backend.onrender.com';
 
       console.log('🔗 채팅방 목록 API 호출:', `${serverUrl}/api/rooms`);
+      console.log('🔑 사용할 Authorization 헤더:', `Bearer ${token.substring(0, 20)}...`);
 
       const response = await fetch(`${serverUrl}/api/rooms`, {
         method: 'GET',
@@ -34,6 +38,8 @@ const RealChatList = ({ onSelect }) => {
         }
       });
 
+      console.log('📡 응답 상태:', response.status, response.statusText);
+      
       const result = await response.json();
       console.log('💬 채팅방 목록 응답:', result);
 
