@@ -68,19 +68,30 @@ function handleChatEvents(io, socket) {
   
   // 채팅방 입장
   socket.on('join-room', async (data) => {
+    console.log(`🚪 join-room 이벤트 수신:`, data);
     try {
       const { roomId } = data;
       const userSession = onlineUsers.get(socket.id);
       
+      console.log(`👤 사용자 세션 확인:`, userSession);
+      
       if (!userSession) {
+        console.log(`❌ 인증되지 않은 사용자: ${socket.id}`);
         socket.emit('error', { message: '먼저 인증해주세요.' });
         return;
       }
       
+      console.log(`🔍 채팅방 ${roomId} 검색 중...`);
+      
       // 채팅방 존재 확인
       const room = await Room.findByPk(roomId);
       if (!room) {
-        console.log(`❌ 채팅방 ${roomId}를 찾을 수 없습니다.`);
+        console.log(`❌ 채팅방 ${roomId}를 데이터베이스에서 찾을 수 없습니다.`);
+        
+        // 모든 채팅방 조회해서 디버깅
+        const allRooms = await Room.findAll({ attributes: ['id', 'name'] });
+        console.log(`📋 데이터베이스의 모든 채팅방:`, allRooms);
+        
         socket.emit('error', { message: '존재하지 않는 채팅방입니다.' });
         return;
       }
@@ -122,6 +133,7 @@ function handleChatEvents(io, socket) {
       console.log(`👤 ${userSession.username}이 방 ${roomId}에 입장`);
       
       // 최근 메시지 가져오기
+      console.log(`📨 채팅방 ${roomId}의 메시지 조회 중...`);
       const messages = await Message.findAll({
         where: { room_id: roomId },
         include: [{
@@ -133,13 +145,30 @@ function handleChatEvents(io, socket) {
         limit: 50
       });
       
-      // 입장 확인 및 메시지 전송
-      socket.emit('room-joined', {
+      console.log(`💬 찾은 메시지 개수: ${messages.length}`);
+      if (messages.length > 0) {
+        console.log(`📋 메시지 미리보기:`, messages.slice(0, 3).map(m => ({
+          id: m.id,
+          message: m.message.substring(0, 20),
+          user: m.user?.username
+        })));
+      }
+      
+      const roomJoinedData = {
         success: true,
         roomId,
         room: room,
         messages: messages.reverse() // 시간순 정렬
+      };
+      
+      console.log(`🏠 room-joined 이벤트 전송:`, {
+        success: roomJoinedData.success,
+        roomId: roomJoinedData.roomId,
+        messagesCount: roomJoinedData.messages.length
       });
+      
+      // 입장 확인 및 메시지 전송
+      socket.emit('room-joined', roomJoinedData);
       
       // 다른 사용자들에게 입장 알림
       socket.to(roomId).emit('user-joined-room', {
@@ -148,8 +177,9 @@ function handleChatEvents(io, socket) {
       });
       
     } catch (error) {
-      console.error('방 입장 오류:', error);
-      socket.emit('error', { message: '방 입장 중 오류가 발생했습니다.' });
+      console.error(`❌ join-room 처리 중 오류:`, error);
+      console.error(`❌ 오류 스택:`, error.stack);
+      socket.emit('error', { message: '방 입장 중 오류가 발생했습니다: ' + error.message });
     }
   });
   
