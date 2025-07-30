@@ -79,15 +79,16 @@
 
 .messageText {
   margin: 0;
+  flex:1;
+  word-break:break-word;
 }
 
 .messageTime {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.7);
-  margin-right: 6px;
-  position: relative;
-  bottom: -2px;
-  order: -1;
+  margin-left: 6px;
+  align-self:flex-end;
+  order:2;
 }
 
 .messageBubble.incoming,
