@@ -1,5 +1,6 @@
 // src/pages/FriendList.jsx
 import React, { useState, useEffect } from 'react';
+import CatAvatar from '../components/CatAvatar';
 import '../styles/MainPage.css';
 
 // === 고침1 - 더미 데이터 제거하고 실제 API로 친구 목록 가져오기 ===
@@ -38,6 +39,7 @@ const ChatList = ({ onSelect }) => {
       if (result.success) {
         // 백엔드 데이터를 기존 형식에 맞게 변환
         const formattedFriends = result.data.map(friend => ({
+          id: friend.id, // 사용자 ID 추가 (고양이 아바타용)
           username: friend.username,
           name: friend.username, // UI에서 이름으로 표시
           lastMessage: '채팅하기'
@@ -141,7 +143,7 @@ const ChatList = ({ onSelect }) => {
       {friends.map((friend) => (
         <div key={friend.username} className="friendItem" 
              onClick={() => handleFriendClick(friend)}>
-          <div className="photoCircle" />
+          <CatAvatar userId={friend.id} size={50} />
           <span className="friendName">{friend.name}</span>
           <span className="latestMessage">{friend.lastMessage}</span>
         </div>

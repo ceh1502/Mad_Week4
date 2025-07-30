@@ -1,5 +1,6 @@
 // === 고침3 - 채팅 탭 전용 컴포넌트 생성 (실제 채팅방 목록) ===
 import React, { useState, useEffect } from 'react';
+import CatAvatar from '../components/CatAvatar';
 import '../styles/MainPage.css';
 
 const RealChatList = ({ onSelect }) => {
@@ -51,7 +52,9 @@ const RealChatList = ({ onSelect }) => {
           description: room.description,
           lastMessage: room.last_message?.message || '',
           lastMessageTime: room.last_message?.created_at || room.created_at,
-          created_at: room.created_at
+          created_at: room.created_at,
+          // 채팅방 ID를 고양이 아바타 시드로 사용
+          avatarSeed: room.id
         }));
         
         setChatRooms(formattedRooms);
@@ -110,7 +113,7 @@ const RealChatList = ({ onSelect }) => {
                console.log('💬 채팅방 선택:', room);
                onSelect(room);
              }}>
-          <div className="photoCircle" />
+          <CatAvatar userId={room.avatarSeed} size={50} />
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             <span className="friendName">{room.name}</span>
             <span style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>

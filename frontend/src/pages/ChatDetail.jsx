@@ -1,6 +1,7 @@
 // src/pages/ChatDetail.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import { FaArrowLeft, FaPaperPlane } from 'react-icons/fa';
+import CatAvatar from '../components/CatAvatar';
 import '../styles/ChatDetail.css';
 // === 이건고침: Socket.io 훅 추가 ===
 import useSocket from '../hooks/useSocket';
@@ -243,10 +244,8 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       <div className="chatDetailHeader">
         <FaArrowLeft className="backIcon" onClick={onBack} />
         <div className="chatAvatarName">
-          {/* avatarUrl이 없으면 빈 div라도 렌더 */}
-          {chat.avatarUrl && (
-            <img src={chat.avatarUrl} alt={chat.name} className="chatAvatar" />
-          )}
+          {/* 고양이 아바타 사용 - 채팅방 ID를 시드로 사용 */}
+          <CatAvatar userId={chat.id} size={40} className="chatAvatar" />
           <span className="chatName">{chat.name ?? '알 수 없는 사용자'}</span>
         </div>
       </div>
