@@ -39,6 +39,7 @@ const ChatDetail = ({ chat = {}, onBack }) => {
 
   // === 고침2: Socket 인증 및 채팅방 입장 로직 수정 (중복 등록 방지) ===
   useEffect(() => {
+    console.log('채팅방 변경됨:', chat.id);
     // 채팅방 변경 시 인증 상태 초기화
     setIsAuthenticated(false);
     setMessages([]); // 메시지도 초기화
@@ -82,18 +83,30 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       // 채팅방 입장 완료 이벤트
       const handleRoomJoined = (data) => {
         console.log('🏠 채팅방 입장 완료:', data);
+        console.log('받은 메시지 개수:', data.messages?.length || 0);
+        
         // 기존 메시지 로드
-        if (data.messages) {
+        if (data.messages && data.messages.length > 0) {
           const currentUser = getCurrentUser();
+          console.log('메시지 로딩 시 현재 사용자:', currentUser);
+          
           if (currentUser) {
-            setMessages(data.messages.map(msg => ({
+            const loadedMessages = data.messages.map(msg => ({
               id: msg.id,
               text: msg.message,
               sender: msg.user_id === currentUser.id ? 'me' : 'other',
               timestamp: msg.created_at,
               username: msg.user?.username
-            })));
+            }));
+            
+            console.log('로드된 메시지들:', loadedMessages);
+            setMessages(loadedMessages);
+          } else {
+            console.error('현재 사용자 정보가 없어서 메시지를 로드할 수 없음');
           }
+        } else {
+          console.log('로드할 메시지가 없음');
+          setMessages([]); // 빈 배열로 초기화
         }
       };
       
