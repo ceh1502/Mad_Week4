@@ -7,15 +7,52 @@ const RealChatList = ({ onSelect }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // 실제 채팅방 목록 가져오기 (나중에 구현)
+  // 실제 채팅방 목록 가져오기
   const fetchChatRooms = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // TODO: 실제 채팅방 목록 API 호출
-      // 현재는 빈 배열로 설정
-      setChatRooms([]);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('로그인이 필요합니다.');
+        setChatRooms([]);
+        return;
+      }
+
+      const serverUrl = window.location.hostname === 'localhost'
+        ? 'http://localhost:4444'
+        : 'https://chat-analyzer-backend.onrender.com';
+
+      console.log('🔗 채팅방 목록 API 호출:', `${serverUrl}/api/rooms`);
+
+      const response = await fetch(`${serverUrl}/api/rooms`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+      console.log('💬 채팅방 목록 응답:', result);
+
+      if (result.success) {
+        // 채팅방 데이터를 ChatDetail에서 사용할 수 있는 형태로 변환
+        const formattedRooms = result.data.map(room => ({
+          id: room.id,
+          name: room.name,
+          description: room.description,
+          lastMessage: room.last_message?.message || '',
+          lastMessageTime: room.last_message?.created_at || room.created_at,
+          created_at: room.created_at
+        }));
+        
+        setChatRooms(formattedRooms);
+      } else {
+        setError(result.message || '채팅방 목록을 불러오는데 실패했습니다.');
+        setChatRooms([]);
+      }
       
     } catch (error) {
       console.error('채팅방 목록 조회 오류:', error);
@@ -63,10 +100,17 @@ const RealChatList = ({ onSelect }) => {
     <div className="friendListContainer">
       {chatRooms.map((room) => (
         <div key={room.id} className="friendItem" 
-             onClick={() => onSelect(room)}>
+             onClick={() => {
+               console.log('💬 채팅방 선택:', room);
+               onSelect(room);
+             }}>
           <div className="photoCircle" />
-          <span className="friendName">{room.name}</span>
-          <span className="latestMessage">{room.lastMessage || '메시지 없음'}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            <span className="friendName">{room.name}</span>
+            <span style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
+              {room.lastMessage || '새 채팅방'}
+            </span>
+          </div>
         </div>
       ))}
     </div>
