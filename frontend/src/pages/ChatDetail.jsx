@@ -70,6 +70,7 @@ const ChatDetail = ({ chat = {}, onBack }) => {
         setIsAuthenticated(true);
         
         // 채팅방 입장 (chat.id가 roomId)
+        console.log('🚪 채팅방 입장 요청:', { roomId: chat.id });
         socket.emit('join-room', { roomId: chat.id });
       };
       
@@ -111,9 +112,27 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       };
       
       // 이벤트 리스너 등록
+      console.log('🎯 인증 관련 이벤트 리스너 등록');
       socket.on('authenticated', handleAuthenticated);
       socket.on('auth-error', handleAuthError);
       socket.on('room-joined', handleRoomJoined);
+      
+      // 모든 socket 이벤트를 로깅 (디버깅용)
+      const originalEmit = socket.emit;
+      socket.emit = function(...args) {
+        console.log('📤 Socket emit:', args[0], args[1]);
+        return originalEmit.apply(this, args);
+      };
+      
+      // 모든 수신 이벤트 로깅
+      const originalOn = socket.on;
+      socket.on = function(event, handler) {
+        const wrappedHandler = function(...args) {
+          console.log('📥 Socket receive:', event, args[0]);
+          return handler.apply(this, args);
+        };
+        return originalOn.call(this, event, wrappedHandler);
+      };
       
       // 컴포넌트 언마운트 시 이벤트 리스너 정리
       return () => {
