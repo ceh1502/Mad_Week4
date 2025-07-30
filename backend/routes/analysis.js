@@ -309,12 +309,6 @@ function analyzeFlirtoLocal(messages, currentUserId) {
   }
   
   // 두 번째 줄 - 구체적인 행동 분석
-  
-  const questionCount = otherMessages.reduce((count, msg) => {
-    const content = msg.content || msg.message || '';
-    return count + (content.includes('?') || content.includes('뭐') || content.includes('어떻') ? 1 : 0);
-  }, 0);
-  
   if (emojiCount > 2 && questionCount > 1) {
     situationComment += '이모티콘도 쓰고 질문도 던지면서 대화 이어가려고 하잖아.\n';
   } else if (emojiCount > 0 || questionCount > 0) {
