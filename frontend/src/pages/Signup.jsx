@@ -38,6 +38,7 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
 
     try {
       const requestData = {
+        name: formData.name,
         username: formData.username,
         password: formData.password
       };
