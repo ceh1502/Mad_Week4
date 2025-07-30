@@ -80,9 +80,12 @@ function handleChatEvents(io, socket) {
       // 채팅방 존재 확인
       const room = await Room.findByPk(roomId);
       if (!room) {
+        console.log(`❌ 채팅방 ${roomId}를 찾을 수 없습니다.`);
         socket.emit('error', { message: '존재하지 않는 채팅방입니다.' });
         return;
       }
+      
+      console.log(`✅ 채팅방 ${roomId} 확인됨:`, room.name);
       
       // 사용자가 참여한 채팅방인지 확인
       const userRoom = await UserRoom.findOne({

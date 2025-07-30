@@ -175,10 +175,17 @@ const ChatDetail = ({ chat = {}, onBack }) => {
         }
       };
       
-      // 에러 처리 리스너
+      // 에러 처리 리스너 (더 상세한 로깅)
       const handleError = (error) => {
-        console.error('Socket 에러:', error);
-        alert('오류가 발생했습니다: ' + error.message);
+        console.error('🚨 Socket 에러:', error);
+        console.log('에러 상세:', JSON.stringify(error, null, 2));
+        
+        if (error.message === '존재하지 않는 채팅방입니다.') {
+          console.error('💥 채팅방이 데이터베이스에 없습니다!');
+          alert('채팅방을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+        } else {
+          alert('오류가 발생했습니다: ' + error.message);
+        }
       };
       
       // 이벤트 리스너 등록
