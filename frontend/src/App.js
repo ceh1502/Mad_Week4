@@ -4,6 +4,7 @@ import Signin from './pages/Signin.jsx';
 import Signup from './pages/Signup.jsx';
 import FriendList from './pages/FriendList.jsx';
 import ChatList from './pages/ChatList.jsx';
+import ChatDetail from './pages/ChatDetail.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import { FlirtoProvider } from './context/FlirtoContext';
 import './App.css';
@@ -58,6 +59,14 @@ if (previewView === 'friend'||previewView==='chat') {
   </FlirtoProvider>
  );
 }
+if (previewView === 'chatDetail') {
+  return (
+    <ChatDetail 
+      chat={{ id: 1, messages: [] }} // 임시 데이터
+      onBack={() => setPreviewView('chat')}
+    />
+  );
+}
 
 
   // 로그인 완료 시
@@ -77,6 +86,7 @@ if (previewView === 'friend'||previewView==='chat') {
         <button onClick={() => setPreviewView('friend')}>Friend UI</button>
         <button onClick={() => setPreviewView('chat')}>Chat UI</button>
         <button onClick={() => setPreviewView(null)}>Reset</button>
+         <button onClick={() => setPreviewView('chatDetail')}>ChatDetail UI</button>
       </div>
 
       <InitPage onSigninClick={scrollToSignin} onSignupClick={scrollToSignup} />
