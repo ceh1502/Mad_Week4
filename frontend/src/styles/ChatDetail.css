@@ -45,6 +45,8 @@
   flex-direction: column;
   gap: 20px;
   margin-bottom: 8px;
+  scrollbar-color:rgba(255, 255, 255, 0.8) transparent;
+  scrollbar-width: thin;
 }
 
 .dateDivider {
@@ -77,15 +79,16 @@
 
 .messageText {
   margin: 0;
+  flex:1;
+  word-break:break-word;
 }
 
 .messageTime {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.7);
-  margin-right: 6px;
-  position: relative;
-  bottom: -2px;
-  order: -1;
+  margin-left: 6px;
+  align-self:flex-end;
+  order:2;
 }
 
 .messageBubble.incoming,
@@ -95,12 +98,13 @@
 }
 
 .chatDetailFooter {
+  position:sticky;
+  bottom:0;
   display: flex;
   align-items: center;
   padding: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.2);
-  flex-shrink: 0; /* 아래로 밀리지 않도록 고정 */
+  background: transparent;
 }
 
 .messageInput {
@@ -122,4 +126,13 @@
   padding: 8px;
   cursor: pointer;
   color: #fff;
+}
+
+.chatMessages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chatMessages::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.8); /* 흰색 스크롤바 */
+  border-radius: 4px;
 }
