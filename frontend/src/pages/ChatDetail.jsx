@@ -253,10 +253,6 @@ const ChatDetail = ({ chat = {}, onBack }) => {
 
       {/* 메시지 리스트 */}
       <div className="chatMessages" ref={scrollRef}>
-        {/* 디버깅용 메시지 개수 표시 */}
-        <div style={{padding: '10px', background: '#f0f0f0', fontSize: '12px'}}>
-          메시지 개수: {messages.length}
-        </div>
         {/* === 아건고침: 메시지 렌더링에 사용자명 추가 === */}
         {messages.map((msg, i) => {
           const prev = messages[i - 1];
