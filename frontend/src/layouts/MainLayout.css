@@ -38,7 +38,7 @@
   align-items: center;
 }
 /* MainPage.css 에 이미 있는 원본 스타일 */
-.friendList {
+/*.friendList {
   flex: 1;
   overflow-y: auto;
   margin-top: 10px;
@@ -64,5 +64,5 @@
 .friendName {
   font-weight: 500;
   color: #fff;
-}
+}*/
 

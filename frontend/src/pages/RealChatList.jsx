@@ -54,9 +54,7 @@ const RealChatList = ({ onSelect }) => {
     return (
       <div className="friendListContainer">
         <div className="friendItem">
-          <span className="friendName">채팅방이 없습니다</span>
-          <span className="latestMessage">친구와 채팅을 시작해보세요</span>
-        </div>
+          <span className="friendName">채팅방이 없습니다</span>        </div>
       </div>
     );
   }

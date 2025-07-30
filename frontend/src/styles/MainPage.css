@@ -35,8 +35,6 @@
   background: transparent;
 }
 
-/* …이하 생략… */
-
 .layoutWrapper {
   display: flex;
   width: 100%;
