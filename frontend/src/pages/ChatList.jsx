@@ -40,7 +40,7 @@ const ChatList = ({ onSelect }) => {
         const formattedFriends = result.data.map(friend => ({
           username: friend.username,
           name: friend.username, // UI에서 이름으로 표시
-          lastMessage: '친구와 채팅하기'
+          lastMessage: '채팅하기'
         }));
         setFriends(formattedFriends);
       } else {
