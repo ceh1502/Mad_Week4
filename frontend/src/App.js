@@ -80,14 +80,6 @@ if (previewView === 'chatDetail') {
 
   return (
     <>
-      <div style={{ position: 'fixed', top: 10, right: 10, zIndex: 999 }}>
-        <button onClick={() => setPreviewView('signin')}>Signin UI</button>
-        <button onClick={() => setPreviewView('signup')}>Signup UI</button>
-        <button onClick={() => setPreviewView('friend')}>Friend UI</button>
-        <button onClick={() => setPreviewView('chat')}>Chat UI</button>
-        <button onClick={() => setPreviewView(null)}>Reset</button>
-         <button onClick={() => setPreviewView('chatDetail')}>ChatDetail UI</button>
-      </div>
 
       <InitPage onSigninClick={scrollToSignin} onSignupClick={scrollToSignup} />
       <div ref={signinRef}>
