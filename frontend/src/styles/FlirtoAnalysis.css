@@ -65,6 +65,129 @@
   text-decoration: underline;
 }
 
+/* Flirto 로고 */
+.flirtoLogo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.flirtoLogo h2 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #f85ec5;
+}
+
+.flirtoLogo p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+/* 분석 시작 버튼 */
+.analysisButton {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.startAnalysisBtn {
+  background: linear-gradient(135deg, #f85ec5, #ff6b9d);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(248, 94, 197, 0.3);
+  transition: all 0.3s ease;
+}
+
+.startAnalysisBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(248, 94, 197, 0.4);
+}
+
+.analysisHint {
+  margin-top: 15px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 로딩 상태 */
+.analysisLoading {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.analysisLoading h3 {
+  font-size: 20px;
+  color: #f85ec5;
+  margin-bottom: 15px;
+}
+
+.analysisLoading p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 8px 0;
+}
+
+/* 에러 상태 */
+.analysisError {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.analysisError h3 {
+  font-size: 18px;
+  color: #ff6b6b;
+  margin-bottom: 15px;
+}
+
+.analysisError p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 20px;
+}
+
+.retryBtn, .reAnalysisBtn {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retryBtn:hover, .reAnalysisBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+}
+
+/* 분석 액션 */
+.analysisActions {
+  text-align: center;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 추천 답변 개선 */
+.suggestionItem {
+  background: rgba(248, 94, 197, 0.1);
+  padding: 10px 15px;
+  border-radius: 15px;
+  margin-bottom: 8px;
+  border-left: 3px solid #f85ec5;
+  transition: all 0.3s ease;
+}
+
+.suggestionItem:hover {
+  background: rgba(248, 94, 197, 0.2);
+  transform: translateX(5px);
+}
+
 /* 애니메이션 효과 */
 .scoreCircle {
   animation: growIn 0.6s ease-in-out;

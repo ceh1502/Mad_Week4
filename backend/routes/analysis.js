@@ -107,23 +107,18 @@ router.post('/flirto/:roomId', authenticateToken, async (req, res) => {
       limit: 30
     });
 
+    // 메시지 수 체크 (최소 5개 필요)
     if (messages.length === 0) {
-      return res.json({
-        success: true,
-        message: '분석할 메시지가 없습니다.',
-        data: {
-          comment: "아직 대화가 시작되지 않았습니다.",
-          analysis: {
-            호감도: 0,
-            관심도: 0,
-            친밀도: 0
-          },
-          suggestions: [
-            "안녕하세요! 반갑습니다 😊",
-            "오늘 어떤 하루를 보내셨나요?",
-            "날씨가 좋네요! 어떻게 지내세요?"
-          ]
-        }
+      return res.status(400).json({
+        success: false,
+        message: '분석할 메시지가 없습니다. 대화를 시작해주세요.'
+      });
+    }
+
+    if (messages.length < 5) {
+      return res.status(400).json({
+        success: false,
+        message: `분석하기에는 메시지가 너무 적습니다. (현재: ${messages.length}개, 최소: 5개 필요)`
       });
     }
 

@@ -85,7 +85,7 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
   // 오른쪽 메인 패널 분기 (Flirto ON/OFF 포함)
   const renderRightPanel = () => {
     return isFlirtoOn 
-      ? <FlirtoAnalysis /> 
+      ? <FlirtoAnalysis selectedChat={selectedChat} /> 
       : <div className="flirtoView">Flirto를 켜보세요!</div>;
   };
 
