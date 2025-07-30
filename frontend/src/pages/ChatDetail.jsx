@@ -81,6 +81,41 @@ const ChatDetail = ({ chat = {}, onBack }) => {
         setIsAuthenticated(false);
       };
       
+      // 이벤트 리스너 등록
+      console.log('🎯 인증 관련 이벤트 리스너 등록');
+      socket.on('authenticated', handleAuthenticated);
+      socket.on('auth-error', handleAuthError);
+      
+      // 모든 socket 이벤트를 로깅 (디버깅용)
+      const originalEmit = socket.emit;
+      socket.emit = function(...args) {
+        console.log('📤 Socket emit:', args[0], args[1]);
+        return originalEmit.apply(this, args);
+      };
+      
+      // 모든 수신 이벤트 로깅
+      const originalOn = socket.on;
+      socket.on = function(event, handler) {
+        const wrappedHandler = function(...args) {
+          console.log('📥 Socket receive:', event, args[0]);
+          return handler.apply(this, args);
+        };
+        return originalOn.call(this, event, wrappedHandler);
+      };
+      
+      // 컴포넌트 언마운트 시 이벤트 리스너 정리
+      return () => {
+        socket.off('authenticated', handleAuthenticated);
+        socket.off('auth-error', handleAuthError);
+      };
+    }
+  }, [socket, isConnected, isAuthenticated, chat.id]);
+
+  // 메시지 수신 이벤트 리스너를 별도 useEffect로 분리
+  useEffect(() => {
+    if (socket && isAuthenticated) {
+      console.log('🎯 메시지 및 채팅방 관련 리스너 등록');
+      
       // 채팅방 입장 완료 이벤트
       const handleRoomJoined = (data) => {
         console.log('🏠 채팅방 입장 완료:', data);
@@ -110,43 +145,6 @@ const ChatDetail = ({ chat = {}, onBack }) => {
           setMessages([]); // 빈 배열로 초기화
         }
       };
-      
-      // 이벤트 리스너 등록
-      console.log('🎯 인증 관련 이벤트 리스너 등록');
-      socket.on('authenticated', handleAuthenticated);
-      socket.on('auth-error', handleAuthError);
-      socket.on('room-joined', handleRoomJoined);
-      
-      // 모든 socket 이벤트를 로깅 (디버깅용)
-      const originalEmit = socket.emit;
-      socket.emit = function(...args) {
-        console.log('📤 Socket emit:', args[0], args[1]);
-        return originalEmit.apply(this, args);
-      };
-      
-      // 모든 수신 이벤트 로깅
-      const originalOn = socket.on;
-      socket.on = function(event, handler) {
-        const wrappedHandler = function(...args) {
-          console.log('📥 Socket receive:', event, args[0]);
-          return handler.apply(this, args);
-        };
-        return originalOn.call(this, event, wrappedHandler);
-      };
-      
-      // 컴포넌트 언마운트 시 이벤트 리스너 정리
-      return () => {
-        socket.off('authenticated', handleAuthenticated);
-        socket.off('auth-error', handleAuthError);
-        socket.off('room-joined', handleRoomJoined);
-      };
-    }
-  }, [socket, isConnected, isAuthenticated, chat.id]);
-
-  // 메시지 수신 이벤트 리스너를 별도 useEffect로 분리
-  useEffect(() => {
-    if (socket && isAuthenticated) {
-      console.log('메시지 수신 리스너 등록');
       
       // 실시간 메시지 수신
       const handleReceiveMessage = (message) => {
@@ -189,12 +187,14 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       };
       
       // 이벤트 리스너 등록
+      socket.on('room-joined', handleRoomJoined);
       socket.on('receive-message', handleReceiveMessage);
       socket.on('error', handleError);
       
       // 컴포넌트 언마운트 시 이벤트 리스너 정리
       return () => {
-        console.log('메시지 수신 리스너 해제');
+        console.log('메시지 및 채팅방 리스너 해제');
+        socket.off('room-joined', handleRoomJoined);
         socket.off('receive-message', handleReceiveMessage);
         socket.off('error', handleError);
       };
