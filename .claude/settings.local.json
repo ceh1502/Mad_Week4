@@ -21,7 +21,8 @@
       "Bash(npm start)",
       "Bash(brew install:*)",
       "Bash(brew services start:*)",
-      "Bash(/usr/local/opt/postgresql@14/bin/psql:*)"
+      "Bash(/usr/local/opt/postgresql@14/bin/psql:*)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   }
