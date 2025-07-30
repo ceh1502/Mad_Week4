@@ -147,7 +147,7 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
                     <div className="searchBar">
                       <input
                         type="text"
-                        placeholder="친구 아이디 입력 후 엔터"
+                        placeholder="친구 아이디 입력"
                         className="searchInput"
                         value={friendSearchInput}
                         onChange={(e) => setFriendSearchInput(e.target.value)}

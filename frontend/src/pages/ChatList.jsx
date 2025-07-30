@@ -131,7 +131,6 @@ const ChatList = ({ onSelect }) => {
       <div className="friendListContainer">
         <div className="friendItem">
           <span className="friendName">친구를 추가해보세요!</span>
-          <span className="latestMessage">위 검색창에 친구 아이디를 입력하세요</span>
         </div>
       </div>
     );
