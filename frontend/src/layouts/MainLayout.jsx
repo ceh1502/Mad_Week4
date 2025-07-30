@@ -9,6 +9,7 @@ import RealChatList from '../pages/RealChatList'; // 채팅방 목록용
 import ChatDetail from '../pages/ChatDetail';
 import Settings   from '../pages/Settings';
 import { FaSearch } from 'react-icons/fa';
+import FlirtoAnalysis from '../pages/FlirtoAnalysis';
 import { useFlirto } from '../context/FlirtoContext';
 import '../styles/MainPage.css';
 
@@ -83,17 +84,11 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
 
   // 오른쪽 메인 패널 분기 (Flirto ON/OFF 포함)
   const renderRightPanel = () => {
-    if (!isFlirtoOn) return <div className="flirtoView">Flirto를 켜보세요!</div>;
-    if (activeTab === 'settings') return <Settings />;
-    if (activeTab === 'friend')   return <div className="emptyView">친구를 선택해보세요</div>;
-    if (activeTab === 'chat') {
-      // 채팅 리스트에서 대화 선택 전
-      return selectedChat
-        ? <div className="emptyView">왼쪽에서 채팅 상세를 봐보세요</div>
-        : <div className="emptyView">채팅을 선택해보세요</div>;
-    }
-    return null;
+    return isFlirtoOn 
+      ? <FlirtoAnalysis /> 
+      : <div className="flirtoView">Flirto를 켜보세요!</div>;
   };
+
 
   return (
     <div className="FriendPageWrapper">

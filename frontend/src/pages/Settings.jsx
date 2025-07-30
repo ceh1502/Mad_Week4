@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import "../styles/Settings.css";
 import logo from '../assets/logo.png';
+import {useFlirto} from '../context/FlirtoContext';
 
 const Settings = () => {
-  const [isFlirtoOn, setIsFlirtoOn] = useState(true);
+  const { isFlirtoOn, setIsFlirtoOn } = useFlirto();
 
   const handleToggle = () => {
     setIsFlirtoOn((prev) => !prev);
