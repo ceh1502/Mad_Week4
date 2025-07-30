@@ -156,8 +156,6 @@ const ChatDetail = ({ chat = {}, onBack }) => {
       message: input.trim()
     });
     
-    // === 고침3: 에러 처리 리스너 제거 (이미 전역 에러 리스너가 있음) ===
-    
     // 입력창 초기화
     setInput('');
   };
