@@ -17,7 +17,11 @@
       "Bash(curl:*)",
       "Bash(node:*)",
       "Bash(npm install:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm start)",
+      "Bash(brew install:*)",
+      "Bash(brew services start:*)",
+      "Bash(/usr/local/opt/postgresql@14/bin/psql:*)"
     ],
     "deny": []
   }
