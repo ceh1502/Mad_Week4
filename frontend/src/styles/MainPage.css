@@ -1,6 +1,6 @@
 /* MainPage.css */
 
-.FriendPageWrapper,.FriendPageWrapper * {
+.FriendPageWrapper{
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -10,7 +10,7 @@
   justify-content: center;
   align-items: center;
   background: hwb(323 77% 0%);
-  color:rgba(102,102,102,1) !important;
+  color:rgba(102,102,102,1);
 }
 
 .backgroundBlur {
