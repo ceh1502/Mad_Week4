@@ -81,10 +81,6 @@ const Signup = ({ onSignupSuccess, onBackToLogin }) => {
       <GlassPanel width="800px" height="400px">
         <img src={logo} alt="logo" className="logo" />
         <div className="SignupContent">
-        <div className="photoUpload">
-          <div className="SignupphotoCircle" />
-          <button className="uploadBtn">사진 업로드</button>
-        </div>
         <form onSubmit={handleSignup}>
           <div className="SignupformGrid">
             <div className="SignupformRow">
