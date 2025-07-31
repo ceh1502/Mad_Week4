@@ -26,7 +26,7 @@ const ChatList = ({ onSelect }) => {
 
       const serverUrl = window.location.hostname === 'localhost'
         ? 'http://localhost:4444'
-        : 'https://chat-analyzer-backend.onrender.com';
+        : 'https://mad-week4-zqbh.onrender.com';
 
       const response = await fetch(`${serverUrl}/api/friends`, {
         headers: {
@@ -73,7 +73,7 @@ const ChatList = ({ onSelect }) => {
       // 1:1 채팅방 생성/찾기 API 호출
       const serverUrl = window.location.hostname === 'localhost'
         ? 'http://localhost:4444'
-        : 'https://chat-analyzer-backend.onrender.com';
+        : 'https://mad-week4-zqbh.onrender.com';
 
       console.log('🔗 API 호출 URL:', `${serverUrl}/api/rooms/direct`);
       const response = await fetch(`${serverUrl}/api/rooms/direct`, {

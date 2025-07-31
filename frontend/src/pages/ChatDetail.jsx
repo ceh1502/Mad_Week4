@@ -34,7 +34,7 @@ const ChatDetail = ({ chat = {}, onBack }) => {
   // Socket 연결 설정 - 백엔드 Render 서버 주소
   const serverUrl = window.location.hostname === 'localhost'
     ? 'http://localhost:4444'  // 로컬 개발 환경
-    : 'https://chat-analyzer-backend.onrender.com'; // 프로덕션 백엔드 서버
+    : 'https://mad-week4-zqbh.onrender.com'; // 프로덕션 백엔드 서버
 
   const { socket, isConnected, connectionError } = useSocket(serverUrl);
 

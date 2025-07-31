@@ -42,7 +42,7 @@ const FlirtoAnalysis = ({ selectedChat }) => {
 
       const serverUrl = window.location.hostname === 'localhost'
         ? 'http://localhost:4444'
-        : 'https://chat-analyzer-backend.onrender.com';
+        : 'https://mad-week4-zqbh.onrender.com';
 
       console.log(`🔍 Flirto 분석 시작: 채팅방 ${selectedChat.id}`);
 

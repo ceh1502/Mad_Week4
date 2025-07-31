@@ -42,7 +42,7 @@ const MainLayout = ({ user, onLogout, defaultTab = 'friend' }) => {
 
       const serverUrl = window.location.hostname === 'localhost'
         ? 'http://localhost:4444'
-        : 'https://chat-analyzer-backend.onrender.com';
+        : 'https://mad-week4-zqbh.onrender.com';
 
       const response = await fetch(`${serverUrl}/api/friends/add`, {
         method: 'POST',

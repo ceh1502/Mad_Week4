@@ -26,7 +26,7 @@ const RealChatList = ({ onSelect }) => {
 
       const serverUrl = window.location.hostname === 'localhost'
         ? 'http://localhost:4444'
-        : 'https://chat-analyzer-backend.onrender.com';
+        : 'https://mad-week4-zqbh.onrender.com';
 
       console.log('🔗 채팅방 목록 API 호출:', `${serverUrl}/api/rooms`);
       console.log('🔑 사용할 Authorization 헤더:', `Bearer ${token.substring(0, 20)}...`);
