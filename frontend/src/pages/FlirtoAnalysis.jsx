@@ -55,7 +55,7 @@ const FlirtoAnalysis = ({ selectedChat }) => {
       });
 
       const result = await response.json();
-      console.log('💕 Flirto 분석 결과:', result);
+      console.log('Flirto 분석 결과:', result);
 
       if (result.success) {
         setAnalysisResult(result.data);
@@ -89,7 +89,7 @@ const FlirtoAnalysis = ({ selectedChat }) => {
   // Flirto 로고 (텍스트로)
   const renderLogo = () => (
     <div className="flirtoLogo">
-      <h2>💕 Flirto</h2>
+      <h2> Flirto</h2>
       <p>AI 채팅 분석 서비스</p>
     </div>
   );
@@ -117,7 +117,7 @@ const FlirtoAnalysis = ({ selectedChat }) => {
       <div className="analysisContainer">
         {renderLogo()}
         <div className="analysisLoading">
-          <h3>🔄 분석중...</h3>
+          <h3>분석중...</h3>
           <p>채팅 내용을 분석하고 있습니다.</p>
           <p>잠시만 기다려주세요.</p>
         </div>
@@ -180,7 +180,7 @@ const FlirtoAnalysis = ({ selectedChat }) => {
         {/* 재분석 버튼 */}
         <div className="analysisActions">
           <button className="reAnalysisBtn" onClick={resetAnalysis}>
-            🔄 재분석
+            재분석
           </button>
         </div>
       </div>
